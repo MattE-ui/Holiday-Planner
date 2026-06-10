@@ -618,9 +618,10 @@ function extractCity(addressText: string): string | undefined {
   return undefined;
 }
 
-/** Upgrade a bstatic photo URL to a consistent large size. */
+/** Upgrade a bstatic photo URL to a consistent large size (the CDN serves any
+ *  `max…` token up to the original — 1024 looked soft on big screens). */
 function normalisePhoto(url: string): string {
-  return url.replace(/\/xdata\/images\/hotel\/[^/]+\//, "/xdata/images/hotel/max1024x768/");
+  return url.replace(/\/xdata\/images\/hotel\/[^/]+\//, "/xdata/images/hotel/max1920x1080/");
 }
 
 /** The numeric image id used to dedupe size variants of the same photo. */
