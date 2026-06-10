@@ -5,10 +5,12 @@ import { Field, FormPage, Input } from "@/components/form";
 import { ImagePicker } from "@/components/image-picker";
 import { SubmitButton } from "@/components/submit-button";
 import { DeleteButton } from "@/components/delete-button";
+import { ownerGuard } from "@/lib/member";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditTripPage({ params }: { params: { trip: string } }) {
+  ownerGuard(`/${params.trip}`);
   const trip = await getTrip(params.trip);
   if (!trip) notFound();
 

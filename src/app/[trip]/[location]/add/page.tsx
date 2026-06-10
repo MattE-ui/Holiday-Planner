@@ -5,6 +5,7 @@ import { getLocation } from "@/lib/store";
 import { createStay } from "@/lib/actions";
 import { FormPage } from "@/components/form";
 import { StayForm } from "@/components/stay-form";
+import { ownerGuard } from "@/lib/member";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function AddStayPage({
 }: {
   params: { trip: string; location: string };
 }) {
+  ownerGuard(`/${params.trip}/${params.location}`);
   const { trip, location } = await getLocation(params.trip, params.location);
   if (!trip || !location) notFound();
 

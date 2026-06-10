@@ -1,4 +1,5 @@
 import { readTrips } from "@/lib/store";
+import { isOwner } from "@/lib/member";
 import { AtelierLanding, type DeckLocation } from "@/components/atelier-landing";
 import { Welcome } from "@/components/welcome";
 
@@ -6,9 +7,10 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const trips = await readTrips();
+  const owner = isOwner();
 
   // Fresh canvas — no trips yet.
-  if (trips.length === 0) return <Welcome />;
+  if (trips.length === 0) return <Welcome owner={owner} />;
 
   // The home page lands on the in-progress (featured) trip; the rest are "also
   // planning". Everything is derived from the content model and handed to the
@@ -54,6 +56,7 @@ export default async function HomePage() {
       fromPrice={fromPrice}
       perPerson={perPerson}
       upcomingCount={trips.length - 1}
+      owner={owner}
     />
   );
 }

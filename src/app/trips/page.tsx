@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, CalendarDays, MapPin, Plus, Users } from "lucide-react";
 import { readTrips } from "@/lib/store";
+import { isOwner } from "@/lib/member";
 import { Cover } from "@/components/cover";
 import { formatGBP } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ export const metadata = { title: "All trips · Holiday Planner" };
 
 export default async function TripsPage() {
   const trips = await readTrips();
+  const owner = isOwner();
 
   return (
     <div className="bg-background">
@@ -25,12 +27,14 @@ export default async function TripsPage() {
               and stays.
             </p>
           </div>
-          <Link
-            href="/new"
-            className="inline-flex h-12 shrink-0 items-center gap-2 self-start rounded-full bg-primary px-6 text-[14.5px] font-bold text-primary-foreground shadow-lift transition-transform duration-300 hover:-translate-y-0.5 md:self-auto"
-          >
-            <Plus className="h-[17px] w-[17px]" /> New trip
-          </Link>
+          {owner && (
+            <Link
+              href="/new"
+              className="inline-flex h-12 shrink-0 items-center gap-2 self-start rounded-full bg-primary px-6 text-[14.5px] font-bold text-primary-foreground shadow-lift transition-transform duration-300 hover:-translate-y-0.5 md:self-auto"
+            >
+              <Plus className="h-[17px] w-[17px]" /> New trip
+            </Link>
+          )}
         </div>
       </header>
 
@@ -39,22 +43,26 @@ export default async function TripsPage() {
           <div className="rounded-[22px] border border-dashed bg-muted/40 px-6 py-20 text-center">
             <h2 className="font-display text-2xl font-semibold">Nothing planned yet</h2>
             <p className="mx-auto mt-2 max-w-md text-muted-foreground">
-              Start a trip, or paste a Booking.com link and build the first one around it.
+              {owner
+                ? "Start a trip, or paste a Booking.com link and build the first one around it."
+                : "Trips will appear here once the planning starts."}
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link
-                href="/new"
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[14px] font-bold text-primary-foreground"
-              >
-                <Plus className="h-4 w-4" /> New trip
-              </Link>
-              <Link
-                href="/import"
-                className="inline-flex h-11 items-center gap-2 rounded-full border border-input px-5 text-[14px] font-semibold text-primary hover:bg-muted"
-              >
-                Import from Booking.com
-              </Link>
-            </div>
+            {owner && (
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link
+                  href="/new"
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[14px] font-bold text-primary-foreground"
+                >
+                  <Plus className="h-4 w-4" /> New trip
+                </Link>
+                <Link
+                  href="/import"
+                  className="inline-flex h-11 items-center gap-2 rounded-full border border-input px-5 text-[14px] font-semibold text-primary hover:bg-muted"
+                >
+                  Import from Booking.com
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       ) : (

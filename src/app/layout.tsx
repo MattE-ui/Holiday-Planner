@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Spectral } from "next/font/google";
 import "./globals.css";
 import { SiteChrome } from "@/components/site-chrome";
+import { getMember, isOwner } from "@/lib/member";
 
 const display = Spectral({
   subsets: ["latin"],
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={display.variable}>
       <body className="min-h-screen font-sans antialiased">
-        <SiteChrome>{children}</SiteChrome>
+        <SiteChrome member={getMember()} owner={isOwner()}>
+          {children}
+        </SiteChrome>
       </body>
     </html>
   );

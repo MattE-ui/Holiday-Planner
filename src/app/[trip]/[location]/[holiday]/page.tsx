@@ -21,10 +21,14 @@ import {
 } from "lucide-react";
 import { getHoliday } from "@/lib/store";
 import { setStayStatus } from "@/lib/actions";
+import { getTripSocial } from "@/lib/social";
+import { getMember, isOwner } from "@/lib/member";
 import { buildBreakdown } from "@/lib/pricing";
 import { cn, formatGBP } from "@/lib/utils";
 import { AccommodationGallery } from "@/components/accommodation-gallery";
 import { StatusPicker } from "@/components/status-picker";
+import { StayPickControl } from "@/components/vote-controls";
+import { NotesSection } from "@/components/notes-section";
 import type { Holiday, HolidayStatus, Location } from "@/content/types";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +47,15 @@ export default async function HolidayPage({
 }) {
   const { trip, location, holiday } = await getHoliday(params.trip, params.location, params.holiday);
   if (!trip || !location || !holiday) notFound();
+
+  const social = await getTripSocial(trip.slug);
+  const member = getMember();
+  const owner = isOwner();
+  const path = `/${trip.slug}/${location.slug}/${holiday.slug}`;
+  const stayVoters = social.stayVotes
+    .filter((v) => v.locationSlug === location.slug && v.holidaySlug === holiday.slug)
+    .map((v) => v.voter);
+  const stayNotes = social.notes.filter((n) => n.holidaySlug === holiday.slug);
 
   const travellers = trip.travellers ?? 4;
   const a = holiday.accommodation;
@@ -102,6 +115,17 @@ export default async function HolidayPage({
             </p>
           )}
 
+          <div className="mt-5">
+            <StayPickControl
+              tripSlug={trip.slug}
+              locationSlug={location.slug}
+              holidaySlug={holiday.slug}
+              path={path}
+              member={member}
+              voters={stayVoters}
+            />
+          </div>
+
           <EssentialsSection accommodation={a} location={location} />
 
           {a.extras && a.extras.length > 0 && (
@@ -132,6 +156,19 @@ export default async function HolidayPage({
           <Section title="Where it is">
             <WhereItIs location={location} holiday={holiday} walk={walk} />
           </Section>
+
+          <NotesSection
+            className="mt-[38px]"
+            intro={`Thoughts on ${holiday.name} itself — the pool, the bedrooms, the price.`}
+            tripSlug={trip.slug}
+            locationSlug={location.slug}
+            holidaySlug={holiday.slug}
+            notes={stayNotes}
+            member={member}
+            owner={owner}
+            path={path}
+            placeholder="What do you make of this one?"
+          />
         </div>
 
         <PriceSidebar
@@ -139,6 +176,7 @@ export default async function HolidayPage({
           travellers={travellers}
           tripSlug={trip.slug}
           locationSlug={location.slug}
+          owner={owner}
           statusAction={setStayStatus.bind(null, trip.slug, location.slug, holiday.slug)}
         />
       </div>
@@ -146,12 +184,14 @@ export default async function HolidayPage({
       {/* In-content action bar — the global footer sits below it. */}
       <div className="mt-2 flex flex-col gap-3 px-6 py-6 text-[13px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-12">
         <span>Unconfirmed costs are shown honestly as &ldquo;to confirm&rdquo; — never an invented figure.</span>
-        <Link
-          href={`/${trip.slug}/${location.slug}/add`}
-          className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
-        >
-          <Plus className="h-[15px] w-[15px]" /> Compare another stay
-        </Link>
+        {owner && (
+          <Link
+            href={`/${trip.slug}/${location.slug}/add`}
+            className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
+          >
+            <Plus className="h-[15px] w-[15px]" /> Compare another stay
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -412,12 +452,14 @@ function PriceSidebar({
   travellers,
   tripSlug,
   locationSlug,
+  owner,
   statusAction,
 }: {
   holiday: Holiday;
   travellers: number;
   tripSlug: string;
   locationSlug: string;
+  owner: boolean;
   statusAction: (status: HolidayStatus) => Promise<void>;
 }) {
   const b = buildBreakdown(holiday, travellers);
@@ -502,11 +544,14 @@ function PriceSidebar({
           </div>
         )}
 
-        {/* Status */}
-        <div className="border-t p-[16px_24px]">
-          <div className="mb-2.5 text-[13px] text-muted-foreground">Where this stay stands</div>
-          <StatusPicker status={holiday.status ?? "idea"} action={statusAction} />
-        </div>
+        {/* Status — the owner moves stays through the pipeline; family members
+            see where it stands via the chip on the gallery. */}
+        {owner && (
+          <div className="border-t p-[16px_24px]">
+            <div className="mb-2.5 text-[13px] text-muted-foreground">Where this stay stands</div>
+            <StatusPicker status={holiday.status ?? "idea"} action={statusAction} />
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex flex-col gap-2.5 p-[16px_24px_22px]">
@@ -520,12 +565,14 @@ function PriceSidebar({
               Open listing <ExternalLink className="h-[17px] w-[17px]" />
             </a>
           )}
-          <Link
-            href={`/${tripSlug}/${locationSlug}/${holiday.slug}/edit`}
-            className="inline-flex h-[46px] items-center justify-center gap-2 rounded-full border border-input text-[14.5px] font-bold text-primary transition-colors hover:bg-muted"
-          >
-            <Pencil className="h-4 w-4" aria-hidden /> Edit details & costs
-          </Link>
+          {owner && (
+            <Link
+              href={`/${tripSlug}/${locationSlug}/${holiday.slug}/edit`}
+              className="inline-flex h-[46px] items-center justify-center gap-2 rounded-full border border-input text-[14.5px] font-bold text-primary transition-colors hover:bg-muted"
+            >
+              <Pencil className="h-4 w-4" aria-hidden /> Edit details & costs
+            </Link>
+          )}
         </div>
       </div>
       <p className="mx-1 mt-3 text-center text-xs text-muted-foreground">

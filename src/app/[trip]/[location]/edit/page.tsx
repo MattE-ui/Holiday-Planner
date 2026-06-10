@@ -5,6 +5,7 @@ import { FormPage } from "@/components/form";
 import { LocationFields } from "@/components/location-fields";
 import { SubmitButton } from "@/components/submit-button";
 import { DeleteButton } from "@/components/delete-button";
+import { ownerGuard } from "@/lib/member";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function EditLocationPage({
 }: {
   params: { trip: string; location: string };
 }) {
+  ownerGuard(`/${params.trip}/${params.location}`);
   const { trip, location } = await getLocation(params.trip, params.location);
   if (!trip || !location) notFound();
 

@@ -15,8 +15,12 @@ import {
   Waves,
 } from "lucide-react";
 import { getTrip } from "@/lib/store";
+import { getTripSocial, type TripSocial } from "@/lib/social";
+import { getMember, isOwner } from "@/lib/member";
 import type { Location } from "@/content/types";
 import { Cover } from "@/components/cover";
+import { LocationPickControl } from "@/components/vote-controls";
+import { NotesSection } from "@/components/notes-section";
 import { cn, formatGBP } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +28,11 @@ export const dynamic = "force-dynamic";
 export default async function TripPage({ params }: { params: { trip: string } }) {
   const trip = await getTrip(params.trip);
   if (!trip) notFound();
+
+  const social = await getTripSocial(trip.slug);
+  const member = getMember();
+  const owner = isOwner();
+  const path = `/${trip.slug}`;
 
   const travellers = trip.travellers ?? 1;
 
@@ -75,12 +84,14 @@ export default async function TripPage({ params }: { params: { trip: string } })
                   : `${trip.locations.length} locations in the running. Here's how they compare before you commit.`}
               </p>
             )}
-            <Link
-              href={`/${trip.slug}/edit`}
-              className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary transition-opacity hover:opacity-80"
-            >
-              <Pencil className="h-[14px] w-[14px]" /> Edit trip
-            </Link>
+            {owner && (
+              <Link
+                href={`/${trip.slug}/edit`}
+                className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary transition-opacity hover:opacity-80"
+              >
+                <Pencil className="h-[14px] w-[14px]" /> Edit trip
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -92,32 +103,61 @@ export default async function TripPage({ params }: { params: { trip: string } })
             <MapPin className="mx-auto h-8 w-8 text-accent" aria-hidden />
             <h2 className="mt-4 font-display text-2xl font-semibold">No locations yet</h2>
             <p className="mx-auto mt-2 max-w-md text-muted-foreground">
-              Add the first place you&rsquo;re considering for {trip.name}, or import a Booking.com
-              listing and it&rsquo;ll create the location for you.
+              {owner
+                ? `Add the first place you're considering for ${trip.name}, or import a Booking.com listing and it'll create the location for you.`
+                : "Nothing to compare yet — locations will appear here as they're researched."}
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link
-                href={`/${trip.slug}/add`}
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[14px] font-bold text-primary-foreground"
-              >
-                <Plus className="h-4 w-4" /> Add a location
-              </Link>
-              <Link
-                href={`/import?trip=${trip.slug}`}
-                className="inline-flex h-11 items-center gap-2 rounded-full border border-input px-5 text-[14px] font-semibold text-primary hover:bg-muted"
-              >
-                Import from Booking.com
-              </Link>
-            </div>
+            {owner && (
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link
+                  href={`/${trip.slug}/add`}
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[14px] font-bold text-primary-foreground"
+                >
+                  <Plus className="h-4 w-4" /> Add a location
+                </Link>
+                <Link
+                  href={`/import?trip=${trip.slug}`}
+                  className="inline-flex h-11 items-center gap-2 rounded-full border border-input px-5 text-[14px] font-semibold text-primary hover:bg-muted"
+                >
+                  Import from Booking.com
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       ) : (
         <div>
           {trip.locations.map((loc, i) => (
-            <LocationBand key={loc.slug} loc={loc} index={i} tripSlug={trip.slug} travellers={travellers} priority={i === 0} />
+            <LocationBand
+              key={loc.slug}
+              loc={loc}
+              index={i}
+              tripSlug={trip.slug}
+              travellers={travellers}
+              priority={i === 0}
+              owner={owner}
+              member={member}
+              path={path}
+              pickVoters={social.locationVotes
+                .filter((v) => v.locationSlug === loc.slug)
+                .map((v) => v.voter)}
+            />
           ))}
         </div>
       )}
+
+      {/* ── Family notes on the trip in general ─────────────────────────── */}
+      <div className="px-6 pt-9 sm:px-12">
+        <NotesSection
+          intro="Anything about the trip as a whole — dates, budget, who's in."
+          tripSlug={trip.slug}
+          notes={social.notes.filter((n) => !n.locationSlug && !n.holidaySlug)}
+          member={member}
+          owner={owner}
+          path={path}
+          placeholder={`A note on ${trip.name}…`}
+        />
+      </div>
 
       {/* ── Footer action bar ───────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 px-6 py-6 text-[13.5px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-12">
@@ -125,12 +165,14 @@ export default async function TripPage({ params }: { params: { trip: string } })
           Comparing {trip.locations.length} location{trip.locations.length === 1 ? "" : "s"} for{" "}
           {trip.name}
         </span>
-        <Link
-          href={`/${trip.slug}/add`}
-          className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
-        >
-          <Plus className="h-[15px] w-[15px]" /> Add another location
-        </Link>
+        {owner && (
+          <Link
+            href={`/${trip.slug}/add`}
+            className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
+          >
+            <Plus className="h-[15px] w-[15px]" /> Add another location
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -143,12 +185,21 @@ function LocationBand({
   tripSlug,
   travellers,
   priority,
+  owner,
+  member,
+  path,
+  pickVoters,
 }: {
   loc: Location;
   index: number;
   tripSlug: string;
   travellers: number;
   priority: boolean;
+  owner: boolean;
+  member?: string;
+  path: string;
+  /** Family members whose overall trip pick is this location. */
+  pickVoters: string[];
 }) {
   // "from" price + stays count derive from the location's holidays (no schema field).
   const prices = loc.holidays
@@ -204,12 +255,14 @@ function LocationBand({
       </div>
 
       {/* Top-right: edit this location (name, details and this photo). */}
-      <Link
-        href={`/${tripSlug}/${loc.slug}/edit`}
-        className="absolute right-6 top-8 z-10 inline-flex h-[34px] items-center gap-2 rounded-full border border-white/[0.34] bg-white/[0.14] px-3.5 text-[12.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/[0.26] sm:right-12"
-      >
-        <Pencil className="h-[13px] w-[13px]" aria-hidden /> Edit location & photo
-      </Link>
+      {owner && (
+        <Link
+          href={`/${tripSlug}/${loc.slug}/edit`}
+          className="absolute right-6 top-8 z-10 inline-flex h-[34px] items-center gap-2 rounded-full border border-white/[0.34] bg-white/[0.14] px-3.5 text-[12.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/[0.26] sm:right-12"
+        >
+          <Pencil className="h-[13px] w-[13px]" aria-hidden /> Edit location & photo
+        </Link>
+      )}
 
       {/* Bottom-left: identity, blurb, October season row, note. */}
       <div className="absolute bottom-9 left-6 right-6 max-w-[720px] sm:left-12 lg:right-[400px]">
@@ -240,6 +293,17 @@ function LocationBand({
         {loc.seasonNote && (
           <p className="mt-3.5 max-w-[560px] text-[13.5px] text-white/[0.66]">{loc.seasonNote}</p>
         )}
+        {/* Family pick — z-raised above the mobile full-band link so the
+            button stays tappable at every breakpoint. */}
+        <div className="relative z-10 mt-5">
+          <LocationPickControl
+            tripSlug={tripSlug}
+            locationSlug={loc.slug}
+            path={path}
+            member={member}
+            voters={pickVoters}
+          />
+        </div>
       </div>
 
       {/* Bottom-right: stays / price status + CTA into accommodations. */}

@@ -4,10 +4,12 @@ import { createLocation } from "@/lib/actions";
 import { FormPage } from "@/components/form";
 import { LocationFields } from "@/components/location-fields";
 import { SubmitButton } from "@/components/submit-button";
+import { ownerGuard } from "@/lib/member";
 
 export const dynamic = "force-dynamic";
 
 export default async function AddLocationPage({ params }: { params: { trip: string } }) {
+  ownerGuard(`/${params.trip}`);
   const trip = await getTrip(params.trip);
   if (!trip) notFound();
 

@@ -4,9 +4,10 @@ import { ArrowRight, Link2, MapPin, Plane, PlusCircle } from "lucide-react";
 /**
  * The fresh-canvas welcome screen, shown on / when no trips exist yet. Two
  * ways in: start a trip by hand, or paste a Booking.com link and let the
- * import build the stay, location and details for you.
+ * import build the stay, location and details for you. Family members
+ * (non-owners) get a calm holding note instead of the create cards.
  */
-export function Welcome() {
+export function Welcome({ owner }: { owner: boolean }) {
   return (
     <div className="relative flex min-h-[100svh] flex-col overflow-hidden bg-[hsl(198_36%_9%)] text-white">
       {/* Quiet brand gradient backdrop — imagery arrives with the first trip. */}
@@ -45,6 +46,14 @@ export function Welcome() {
           and honest totals — and decide together, without twelve browser tabs.
         </p>
 
+        {!owner && (
+          <p className="mt-9 max-w-[420px] text-[15px] leading-[1.6] text-white/[0.66]">
+            Nothing has been planned yet — once the first trip is added, the comparison
+            starts here.
+          </p>
+        )}
+
+        {owner && (
         <div className="mt-10 grid w-full max-w-[680px] gap-4 sm:grid-cols-2">
           <Link
             href="/import"
@@ -82,6 +91,7 @@ export function Welcome() {
             </span>
           </Link>
         </div>
+        )}
 
         <p className="mt-8 inline-flex items-center gap-2 text-[13px] text-white/[0.55]">
           <MapPin className="h-3.5 w-3.5" aria-hidden />

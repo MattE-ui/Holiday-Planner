@@ -4,6 +4,7 @@ import { deleteStay, updateStay } from "@/lib/actions";
 import { FormPage } from "@/components/form";
 import { StayForm } from "@/components/stay-form";
 import { DeleteButton } from "@/components/delete-button";
+import { ownerGuard } from "@/lib/member";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function EditStayPage({
 }: {
   params: { trip: string; location: string; holiday: string };
 }) {
+  ownerGuard(`/${params.trip}/${params.location}/${params.holiday}`);
   const { trip, location, holiday } = await getHoliday(params.trip, params.location, params.holiday);
   if (!trip || !location || !holiday) notFound();
 

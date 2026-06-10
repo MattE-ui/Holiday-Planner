@@ -1,5 +1,6 @@
 import { ImportWizard } from "@/components/import-wizard";
 import { FormPage } from "@/components/form";
+import { ownerGuard } from "@/lib/member";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export default function ImportPage({
 }: {
   searchParams: { trip?: string; location?: string };
 }) {
+  ownerGuard();
   return (
     <FormPage
       backHref="/"

@@ -1,12 +1,14 @@
 import { createTrip } from "@/lib/actions";
 import { Field, FormPage, Input } from "@/components/form";
 import { SubmitButton } from "@/components/submit-button";
+import { ownerGuard } from "@/lib/member";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "New trip · Holiday Planner" };
 
 export default function NewTripPage() {
+  ownerGuard();
   return (
     <FormPage
       backHref="/"

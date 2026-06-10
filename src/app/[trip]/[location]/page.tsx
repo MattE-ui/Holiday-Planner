@@ -21,8 +21,12 @@ import {
 } from "lucide-react";
 import { getLocation } from "@/lib/store";
 import { deleteLocation } from "@/lib/actions";
+import { getTripSocial } from "@/lib/social";
+import { getMember, isOwner } from "@/lib/member";
 import { Cover } from "@/components/cover";
 import { DeleteButton } from "@/components/delete-button";
+import { StayPickControl } from "@/components/vote-controls";
+import { NotesSection } from "@/components/notes-section";
 import { cn, formatGBP } from "@/lib/utils";
 import type { Holiday, HolidayStatus } from "@/content/types";
 
@@ -82,36 +86,75 @@ export default async function LocationPage({
   const travellers = trip.travellers ?? 4;
   const stays = location.holidays;
 
+  const social = await getTripSocial(trip.slug);
+  const member = getMember();
+  const owner = isOwner();
+  const path = `/${trip.slug}/${location.slug}`;
+  const locationNotes = social.notes.filter(
+    (n) => n.locationSlug === location.slug && !n.holidaySlug,
+  );
+  /** Names who picked a given stay as their favourite here. */
+  const votersFor = (holidaySlug: string) =>
+    social.stayVotes
+      .filter((v) => v.locationSlug === location.slug && v.holidaySlug === holidaySlug)
+      .map((v) => v.voter);
+  const pickFor = (holidaySlug: string, small?: boolean) => (
+    <StayPickControl
+      tripSlug={trip.slug}
+      locationSlug={location.slug}
+      holidaySlug={holidaySlug}
+      path={path}
+      member={member}
+      voters={votersFor(holidaySlug)}
+      small={small}
+    />
+  );
+
   // Empty state — no stays logged for this location yet.
   if (stays.length === 0) {
     return (
       <div className="bg-background">
-        <PageHeader trip={trip} location={location} stays={stays} travellers={travellers} />
+        <PageHeader trip={trip} location={location} stays={stays} travellers={travellers} owner={owner} />
         <div className="px-6 pb-10 sm:px-12">
           <div className="rounded-[22px] border border-dashed bg-muted/40 px-6 py-20 text-center">
             <Bed className="mx-auto h-8 w-8 text-accent" aria-hidden />
             <h2 className="mt-4 font-display text-2xl font-semibold">No stays added here yet</h2>
             <p className="mx-auto mt-2 max-w-md text-muted-foreground">
-              Import a Booking.com listing for {location.name} and it&apos;ll appear here as a full
-              stay — specs, photos and an honest price breakdown — or add one by hand.
+              {owner
+                ? `Import a Booking.com listing for ${location.name} and it'll appear here as a full stay — specs, photos and an honest price breakdown — or add one by hand.`
+                : `No accommodation options for ${location.name} yet — they'll appear here as the research comes together.`}
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link
-                href={`/import?trip=${trip.slug}&location=${location.slug}`}
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[14px] font-bold text-primary-foreground"
-              >
-                Import from Booking.com
-              </Link>
-              <Link
-                href={`/${trip.slug}/${location.slug}/add`}
-                className="inline-flex h-11 items-center gap-2 rounded-full border border-input px-5 text-[14px] font-semibold text-primary hover:bg-muted"
-              >
-                <Plus className="h-4 w-4" /> Add a stay by hand
-              </Link>
-            </div>
+            {owner && (
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link
+                  href={`/import?trip=${trip.slug}&location=${location.slug}`}
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[14px] font-bold text-primary-foreground"
+                >
+                  Import from Booking.com
+                </Link>
+                <Link
+                  href={`/${trip.slug}/${location.slug}/add`}
+                  className="inline-flex h-11 items-center gap-2 rounded-full border border-input px-5 text-[14px] font-semibold text-primary hover:bg-muted"
+                >
+                  <Plus className="h-4 w-4" /> Add a stay by hand
+                </Link>
+              </div>
+            )}
           </div>
         </div>
-        <Footer trip={trip} location={location} />
+        <div className="px-6 pb-10 pt-6 sm:px-12">
+          <NotesSection
+            intro={`Anything about ${location.name} in general — vibe, flights, doubts.`}
+            tripSlug={trip.slug}
+            locationSlug={location.slug}
+            notes={locationNotes}
+            member={member}
+            owner={owner}
+            path={path}
+            placeholder={`A note on ${location.name}…`}
+          />
+        </div>
+        <Footer trip={trip} location={location} owner={owner} />
       </div>
     );
   }
@@ -122,7 +165,7 @@ export default async function LocationPage({
 
   return (
     <div className="bg-background">
-      <PageHeader trip={trip} location={location} stays={stays} travellers={travellers} />
+      <PageHeader trip={trip} location={location} stays={stays} travellers={travellers} owner={owner} />
 
       {/* ── Front-runner ─────────────────────────────────────────────────── */}
       <div className="px-6 sm:px-12">
@@ -130,6 +173,7 @@ export default async function LocationPage({
           stay={featured}
           travellers={travellers}
           href={`/${trip.slug}/${location.slug}/${featured.slug}`}
+          pick={pickFor(featured.slug)}
         />
       </div>
 
@@ -151,13 +195,28 @@ export default async function LocationPage({
                 stay={s}
                 travellers={travellers}
                 href={`/${trip.slug}/${location.slug}/${s.slug}`}
+                pick={pickFor(s.slug, true)}
               />
             ))}
           </div>
         </>
       )}
 
-      <Footer trip={trip} location={location} />
+      {/* ── Family notes on this location ────────────────────────────────── */}
+      <div className="px-6 pb-10 pt-14 sm:px-12">
+        <NotesSection
+          intro={`Anything about ${location.name} in general — vibe, flights, doubts.`}
+          tripSlug={trip.slug}
+          locationSlug={location.slug}
+          notes={locationNotes}
+          member={member}
+          owner={owner}
+          path={path}
+          placeholder={`A note on ${location.name}…`}
+        />
+      </div>
+
+      <Footer trip={trip} location={location} owner={owner} />
     </div>
   );
 }
@@ -169,11 +228,13 @@ function PageHeader({
   location,
   stays,
   travellers,
+  owner,
 }: {
   trip: { slug: string; name: string };
   location: { slug: string; name: string; country: string };
   stays: Holiday[];
   travellers: number;
+  owner: boolean;
 }) {
   const lead = stays.find((s) => s.status === "favourite") ?? stays[0];
   const costedTotals = stays
@@ -190,12 +251,14 @@ function PageHeader({
         >
           <ArrowLeft className="h-[15px] w-[15px]" /> {trip.name} · all locations
         </Link>
-        <Link
-          href={`/${trip.slug}/${location.slug}/edit`}
-          className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary transition-opacity hover:opacity-80"
-        >
-          <Pencil className="h-[14px] w-[14px]" /> Edit location & photo
-        </Link>
+        {owner && (
+          <Link
+            href={`/${trip.slug}/${location.slug}/edit`}
+            className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary transition-opacity hover:opacity-80"
+          >
+            <Pencil className="h-[14px] w-[14px]" /> Edit location & photo
+          </Link>
+        )}
       </div>
 
       <div className="mt-3.5 flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-10">
@@ -249,10 +312,13 @@ function FeaturedStay({
   stay,
   travellers,
   href,
+  pick,
 }: {
   stay: Holiday;
   travellers: number;
   href: string;
+  /** The family's StayPickControl for this stay, built by the page. */
+  pick: React.ReactNode;
 }) {
   const a = stay.accommodation;
   const d = deriveStay(stay, travellers);
@@ -317,6 +383,8 @@ function FeaturedStay({
               </div>
             )}
           </div>
+
+          <div className="mt-[18px]">{pick}</div>
         </div>
 
         {/* Price row */}
@@ -364,10 +432,13 @@ function CompactStay({
   stay,
   travellers,
   href,
+  pick,
 }: {
   stay: Holiday;
   travellers: number;
   href: string;
+  /** The family's StayPickControl for this stay, built by the page. */
+  pick: React.ReactNode;
 }) {
   const a = stay.accommodation;
   const d = deriveStay(stay, travellers);
@@ -440,6 +511,8 @@ function CompactStay({
             Details <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
+
+        {pick}
       </div>
     </article>
   );
@@ -582,9 +655,11 @@ function Dot() {
 function Footer({
   trip,
   location,
+  owner,
 }: {
   trip: { slug: string };
   location: { slug: string; name: string };
+  owner: boolean;
 }) {
   return (
     <div className="flex flex-col gap-3 px-6 py-6 text-[13px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-12">
@@ -592,21 +667,23 @@ function Footer({
         Prices are party totals for the stay · figures shown as &ldquo;to confirm&rdquo; aren&rsquo;t
         quoted yet
       </span>
-      <div className="flex flex-wrap items-center gap-4">
-        <DeleteButton
-          action={deleteLocation.bind(null, trip.slug, location.slug)}
-          confirmText={`Remove ${location.name} and all its stays from this trip?`}
-          className="h-auto border-0 px-0 text-[13px] hover:bg-transparent hover:opacity-80"
-        >
-          Remove location
-        </DeleteButton>
-        <Link
-          href={`/${trip.slug}/${location.slug}/add`}
-          className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
-        >
-          <Plus className="h-[15px] w-[15px]" /> Add another stay
-        </Link>
-      </div>
+      {owner && (
+        <div className="flex flex-wrap items-center gap-4">
+          <DeleteButton
+            action={deleteLocation.bind(null, trip.slug, location.slug)}
+            confirmText={`Remove ${location.name} and all its stays from this trip?`}
+            className="h-auto border-0 px-0 text-[13px] hover:bg-transparent hover:opacity-80"
+          >
+            Remove location
+          </DeleteButton>
+          <Link
+            href={`/${trip.slug}/${location.slug}/add`}
+            className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
+          >
+            <Plus className="h-[15px] w-[15px]" /> Add another stay
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

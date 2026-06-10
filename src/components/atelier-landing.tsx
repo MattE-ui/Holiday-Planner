@@ -32,6 +32,8 @@ interface AtelierLandingProps {
   perPerson: number | null;
   /** Count of other trips being planned (drives the mobile pill). */
   upcomingCount: number;
+  /** Whether this device holds the owner key — gates the add/import chrome. */
+  owner: boolean;
 }
 
 const EASE = "cubic-bezier(0.22,1,0.36,1)";
@@ -52,6 +54,7 @@ export function AtelierLanding({
   fromPrice,
   perPerson,
   upcomingCount,
+  owner,
 }: AtelierLandingProps) {
   const [active, setActive] = useState(0);
   const railRef = useRef<HTMLDivElement>(null);
@@ -69,12 +72,14 @@ export function AtelierLanding({
         />
         <div className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10">
           <Wordmark />
-          <Link
-            href="/new"
-            className="inline-flex h-[38px] items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 text-[13.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-          >
-            <Plus className="h-[15px] w-[15px]" /> Add a trip
-          </Link>
+          {owner && (
+            <Link
+              href="/new"
+              className="inline-flex h-[38px] items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 text-[13.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            >
+              <Plus className="h-[15px] w-[15px]" /> Add a trip
+            </Link>
+          )}
         </div>
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-24 text-center">
           <StatusChip label={status} />
@@ -87,23 +92,26 @@ export function AtelierLanding({
             </p>
           )}
           <p className="mt-5 max-w-[440px] text-[15.5px] leading-[1.6] text-white/[0.72]">
-            No locations in the running yet — add the first place you&rsquo;re considering and the
-            comparison starts here.
+            {owner
+              ? "No locations in the running yet — add the first place you're considering and the comparison starts here."
+              : "No locations in the running yet — they'll appear here as the research comes together."}
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href={`/${tripSlug}/add`}
-              className="inline-flex h-[52px] items-center gap-2.5 rounded-full bg-white px-[26px] text-[16px] font-bold text-primary shadow-[0_12px_30px_rgba(0,0,0,0.3)] transition-transform duration-300 hover:-translate-y-0.5"
-            >
-              <MapPin className="h-[18px] w-[18px]" /> Add a location
-            </Link>
-            <Link
-              href="/import"
-              className="inline-flex h-[52px] items-center gap-2.5 rounded-full border border-white/40 bg-white/10 px-[26px] text-[15px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-            >
-              Import from Booking.com
-            </Link>
-          </div>
+          {owner && (
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href={`/${tripSlug}/add`}
+                className="inline-flex h-[52px] items-center gap-2.5 rounded-full bg-white px-[26px] text-[16px] font-bold text-primary shadow-[0_12px_30px_rgba(0,0,0,0.3)] transition-transform duration-300 hover:-translate-y-0.5"
+              >
+                <MapPin className="h-[18px] w-[18px]" /> Add a location
+              </Link>
+              <Link
+                href="/import"
+                className="inline-flex h-[52px] items-center gap-2.5 rounded-full border border-white/40 bg-white/10 px-[26px] text-[15px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+              >
+                Import from Booking.com
+              </Link>
+            </div>
+          )}
           {upcomingCount > 0 && (
             <Link href="/trips" className="mt-8 text-[13.5px] font-semibold text-white/70 hover:text-white">
               All trips · {upcomingCount + 1}
@@ -183,12 +191,14 @@ export function AtelierLanding({
               All trips · {upcomingCount + 1}
             </Link>
           )}
-          <Link
-            href="/new"
-            className="inline-flex h-[38px] items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 text-[13.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-          >
-            <Plus className="h-[15px] w-[15px]" /> Add a trip
-          </Link>
+          {owner && (
+            <Link
+              href="/new"
+              className="inline-flex h-[38px] items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 text-[13.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            >
+              <Plus className="h-[15px] w-[15px]" /> Add a trip
+            </Link>
+          )}
         </div>
       </div>
 
@@ -285,21 +295,23 @@ export function AtelierLanding({
       {/* ── Mobile / tablet top bar ─────────────────────────────────────── */}
       <div className="absolute inset-x-[18px] top-[calc(env(safe-area-inset-top,0px)+16px)] z-10 flex items-center justify-between lg:hidden">
         <Wordmark />
-        <Link
-          href={upcomingCount > 0 ? "/trips" : "/new"}
-          className="inline-flex h-[34px] items-center gap-1.5 rounded-full border border-white/[0.34] bg-white/12 px-3 text-[12px] font-semibold text-white backdrop-blur-sm"
-        >
-          {upcomingCount > 0 ? (
-            <>
-              <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
-              {upcomingCount} more {upcomingCount === 1 ? "trip" : "trips"}
-            </>
-          ) : (
-            <>
-              <Plus className="h-[13px] w-[13px]" /> Add a trip
-            </>
-          )}
-        </Link>
+        {(upcomingCount > 0 || owner) && (
+          <Link
+            href={upcomingCount > 0 ? "/trips" : "/new"}
+            className="inline-flex h-[34px] items-center gap-1.5 rounded-full border border-white/[0.34] bg-white/12 px-3 text-[12px] font-semibold text-white backdrop-blur-sm"
+          >
+            {upcomingCount > 0 ? (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
+                {upcomingCount} more {upcomingCount === 1 ? "trip" : "trips"}
+              </>
+            ) : (
+              <>
+                <Plus className="h-[13px] w-[13px]" /> Add a trip
+              </>
+            )}
+          </Link>
+        )}
       </div>
 
       {/* ── Mobile / tablet title block ─────────────────────────────────── */}

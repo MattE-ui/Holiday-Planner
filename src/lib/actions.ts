@@ -4,13 +4,23 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { CarHire, CostLine, Flight, Holiday, HolidayStatus } from "@/content/types";
 import * as store from "@/lib/store";
+import { isOwner } from "@/lib/member";
 import { parseBookingHtml, parseBookingListing, type ParsedBooking } from "@/lib/booking";
 
 // ---------------------------------------------------------------------------
 // Server actions — every mutation in the app goes through here. Each action
 // revalidates the whole tree (the data file feeds every page) and redirects
 // to wherever the user would naturally land next.
+//
+// All plan mutations are owner-gated: family members browse, vote and leave
+// notes (social-actions.ts), but only the owner key may change the plan.
 // ---------------------------------------------------------------------------
+
+/** Bounce non-owners home instead of mutating. UI hides edit chrome for
+ *  them too; this is the hard stop behind it. */
+function requireOwner() {
+  if (!isOwner()) redirect("/");
+}
 
 function str(fd: FormData, name: string): string | undefined {
   const v = fd.get(name);
@@ -45,6 +55,7 @@ function refreshAll() {
 // ---- trips -----------------------------------------------------------------
 
 export async function createTrip(formData: FormData) {
+  requireOwner();
   const name = str(formData, "name");
   if (!name) return;
   const trip = await store.addTrip({
@@ -58,6 +69,7 @@ export async function createTrip(formData: FormData) {
 }
 
 export async function updateTrip(tripSlug: string, formData: FormData) {
+  requireOwner();
   const name = str(formData, "name");
   if (!name) return;
   await store.updateTrip(tripSlug, {
@@ -73,6 +85,7 @@ export async function updateTrip(tripSlug: string, formData: FormData) {
 }
 
 export async function deleteTrip(tripSlug: string) {
+  requireOwner();
   await store.deleteTrip(tripSlug);
   refreshAll();
   redirect("/");
@@ -81,6 +94,7 @@ export async function deleteTrip(tripSlug: string) {
 // ---- locations ---------------------------------------------------------------
 
 export async function createLocation(tripSlug: string, formData: FormData) {
+  requireOwner();
   const name = str(formData, "name");
   const country = str(formData, "country");
   if (!name || !country) return;
@@ -118,6 +132,7 @@ export async function createLocation(tripSlug: string, formData: FormData) {
 }
 
 export async function updateLocation(tripSlug: string, locationSlug: string, formData: FormData) {
+  requireOwner();
   const name = str(formData, "name");
   const country = str(formData, "country");
   if (!name || !country) return;
@@ -141,6 +156,7 @@ export async function updateLocation(tripSlug: string, locationSlug: string, for
 }
 
 export async function deleteLocation(tripSlug: string, locationSlug: string) {
+  requireOwner();
   await store.deleteLocation(tripSlug, locationSlug);
   refreshAll();
   redirect(`/${tripSlug}`);
@@ -228,6 +244,7 @@ function holidayFromForm(formData: FormData): Omit<Holiday, "slug"> {
 }
 
 export async function createStay(tripSlug: string, locationSlug: string, formData: FormData) {
+  requireOwner();
   const holiday = await store.addHoliday(tripSlug, locationSlug, holidayFromForm(formData));
   refreshAll();
   redirect(`/${tripSlug}/${locationSlug}/${holiday.slug}`);
@@ -239,12 +256,14 @@ export async function updateStay(
   holidaySlug: string,
   formData: FormData,
 ) {
+  requireOwner();
   await store.updateHoliday(tripSlug, locationSlug, holidaySlug, holidayFromForm(formData));
   refreshAll();
   redirect(`/${tripSlug}/${locationSlug}/${holidaySlug}`);
 }
 
 export async function deleteStay(tripSlug: string, locationSlug: string, holidaySlug: string) {
+  requireOwner();
   await store.deleteHoliday(tripSlug, locationSlug, holidaySlug);
   refreshAll();
   redirect(`/${tripSlug}/${locationSlug}`);
@@ -256,6 +275,7 @@ export async function setStayStatus(
   holidaySlug: string,
   status: HolidayStatus,
 ) {
+  requireOwner();
   await store.updateHoliday(tripSlug, locationSlug, holidaySlug, { status });
   refreshAll();
 }
@@ -315,6 +335,7 @@ export async function parsePastedListing(html: string, url: string): Promise<Imp
 
 /** Final step of the import wizard: create trip/location as needed, then the stay. */
 export async function importStay(formData: FormData) {
+  requireOwner();
   // Target trip — an existing slug, or a new trip created inline.
   let tripSlug = str(formData, "tripSlug");
   if (!tripSlug || tripSlug === "__new__") {
