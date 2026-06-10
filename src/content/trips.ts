@@ -46,6 +46,15 @@ export const trips: Trip[] = [
             image:
               "https://images.unsplash.com/photo-1509600110300-21b9d5fedeb7?auto=format&fit=crop&w=1600&q=80",
             imageAlt: "A stone villa beside its private pool on a wooded hillside at dusk",
+            // Extra gallery photos (cover + these drive the "{n} photos" count and the
+            // detail gallery's thumbnails). Representative — swap for the listing's own.
+            photos: [
+              "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1600&q=80",
+              "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1600&q=80",
+              "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1600&q=80",
+              "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1600&q=80",
+              "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=1600&q=80",
+            ],
             accommodation: {
               bedrooms: 2,
               sleeps: 4,

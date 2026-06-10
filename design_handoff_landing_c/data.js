@@ -174,6 +174,22 @@ window.HP = (function () {
         walk: "~10–15 min to town & harbour",
         pros: ["Sea-view private pool", "Single-storey — no stairs", "Recently renovated"],
         cons: ["2 bedrooms (sleeps 4: 1 double + 3 singles)"],
+        listingUrl: "#",
+        rateNote: "Free-cancellation rate — cancel free before 29 Sep. Non-refundable rate £1,924. Was £2,589.",
+        extras: ["Sea-view private pool", "Free on-site parking", "Free WiFi", "Washing machine", "BBQ", "Covered veranda", "Fully equipped kitchen"],
+        gallery: [
+          VILLA_IMG.veranda,
+          VILLA_IMG.likya,
+          "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+          VILLA_IMG.mavi,
+          "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
+        ],
+        costLines: [
+          { label: "Accommodation", detail: "5 nights · Villa Veranda", amount: 2304 },
+          { label: "Flights", detail: "Manchester → Dalaman · 4 adults", amount: null },
+          { label: "Car hire", detail: "7 days · from the airport", amount: null },
+          { label: "Transfers", detail: "Dalaman ↔ Kalkan", amount: null },
+        ],
       },
       {
         slug: "kalkan-villa-likya-heights",

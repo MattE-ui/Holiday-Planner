@@ -152,6 +152,43 @@ to first/highest-rated). **Honest cost:** `total === null` → render "Price to 
 never a number. (The prototype's `staysByLocation.kalkan` mirrors this; Villa Veranda is the real seed
 listing, the other two are placeholder comparison candidates.)
 
+### 6. Accommodation detail — `src/app/[trip]/[location]/[holiday]/page.tsx`
+**Route:** opens from "View full details" on a stay. **Purpose:** the full picture of one accommodation —
+images, details, location and pros/cons — plus the honest full price breakdown.
+
+**Layout** — light seafoam page, sticky nav, a breadcrumb back to the location's stays, then a full-bleed
+**gallery**, then a two-column body (main + sticky price sidebar).
+- **Gallery** (`Gallery`, `height:472; padding:0 8px; flex; gap:8`): a large main image (`flex:1.6`,
+  `radius:18`) with the `StatusChip` top-left, and a 2×2 grid (`flex:1; gap:8`) of up to 4 thumbnails
+  (`radius:14`). Clicking a thumbnail sets it as the main image (active thumb gets a teal outline). The
+  last thumbnail carries an "All {photoCount} photos" dark overlay. Client component (`useState`).
+- **Main column** (`flex:1`): a "★ {rating} · Excellent" line; `<h1>` name (Spectral 600 / 46px); a
+  `MapPin` "{location}, {country} · {walk}" line; a 17px summary. Then four `Section`s (each: Spectral 24
+  heading + content, `margin-top:38`):
+  - **The essentials** — a 3-col grid of `Essential` cells (`border hsl(196 24% 90%); radius:14`): an
+    accent rounded-square icon (`bg hsl(190 38% 94%); color hsl(193 52% 28%)`) + a Spectral value
+    (~16.5px) + a muted label. Bedrooms/sleeps, bathrooms, size (sq ft), private pool, A/C, flight time.
+  - **What's included** — 2-col list of `accommodation.extras`, each with a green check.
+  - **Pros & cons** — two panels side by side: "Why we're keen" (green: `border hsl(142 40% 82%); bg
+    hsl(142 45% 97%)`, check icons) and "Worth noting" (amber: `border hsl(33 60% 82%); bg hsl(36 70%
+    97%)`, "!" markers).
+  - **Where it is** — a striped placeholder map (`repeating-linear-gradient(135deg, hsl(190 24% 92%) 0
+    14px, hsl(190 24% 95%) 14px 28px)`) with a teardrop pin and a monospace "drop a pin here" caption
+    (replace with a real map embed), above a 3-col fact strip (town/harbour walk · airport+flight ·
+    beach distance).
+- **Price sidebar** (`PriceBreakdown`, `position:sticky; top:90; width:384`): white card —
+  **£{total}** (Spectral 38) "accommodation" + "{nights} nights · ~£Xpp · ~£Y/night" + a dated line;
+  then **per-line breakdown** (`costLines`: Accommodation / Flights / Car hire / Transfers) where each
+  row shows label + detail and either a £ amount or an amber **"to confirm"** pill; a seafoam "Confirmed
+  so far £X · +N costs still to confirm" band; the `rateNote` with an info icon; then **"Open listing"**
+  (teal, external-link icon) and **"Saved as favourite"** (outline, heart) buttons; and a centered
+  "Unconfirmed costs shown honestly — nothing hidden" footnote.
+
+**Data:** everything maps to the `Holiday` type (`accommodation`, `nights`, `dates`, `accommodationTotal`,
+`rateNote`, `pros`, `cons`, `listingUrl`). The breakdown lines are the holiday's `flights` / `carHire` /
+`transfers` / `extraCosts` (+ the accommodation line) — render any `null`/missing amount as "to confirm".
+A `gallery` (image array) is needed; the current model has one `image` per holiday, so add a photos array.
+
 ---
 
 ## Component: Location deck (the signature interaction)
@@ -270,8 +307,11 @@ instead of a broken image — this already exists as the `Cover` component
   (`LocationsScreen`, `LocationBand`, `SeasonStat`).
 - `accommodations-screen.jsx` — **Accommodations / location page**: large featured stay + smaller
   horizontal tiles (`AccommodationsScreen`, `FeaturedStay`, `CompactStay`, `SpecChip`).
+- `detail-screen.jsx` — **Accommodation detail page**: gallery, essentials, included, pros & cons,
+  location, honest price breakdown (`AccommodationDetail`, `Gallery`, `Essential`, `Section`,
+  `PriceBreakdown`, `PriceLine`).
 - `shared.jsx` — `SmartImage` (photo w/ gradient fallback), `Ico` (icons inc. thermo/sun/wave/star/
-  bath/users/snow/camera/check/heart), `Wordmark`, `StatusChip`.
+  bath/users/snow/camera/check/heart/ruler/ext/info), `Wordmark`, `StatusChip`.
 - `data.js` — the demo data shape (mirrors your `trips.ts`; in the app, read from `trips.ts`).
 
 > Implement against your repo's real components and routes — the HTML here is the reference, your

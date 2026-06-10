@@ -58,6 +58,7 @@
 <script type="text/babel" src="directionC-many.jsx"></script>
 <script type="text/babel" src="locations-screen.jsx"></script>
 <script type="text/babel" src="accommodations-screen.jsx"></script>
+<script type="text/babel" src="detail-screen.jsx"></script>
 
 <script type="text/babel">
   const { DesignCanvas, DCSection, DCArtboard } = window;
@@ -123,6 +124,16 @@
         >
           <DCArtboard id="accom-desktop" label="Kalkan — 3 stays being compared" width={W} height={1240}>
             <window.AccommodationsScreen />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="accommodation-detail"
+          title="Accommodation · Detail"
+          subtitle="What opens from 'View full details' on a stay. The full picture of one accommodation — photo gallery (click a thumb to swap the main image), the essentials, what's included, pros & cons, where it is, and an honest price breakdown with costs still 'to confirm'."
+        >
+          <DCArtboard id="detail-desktop" label="Villa Veranda — full detail" width={W} height={1820}>
+            <window.AccommodationDetail />
           </DCArtboard>
         </DCSection>
       </DesignCanvas>

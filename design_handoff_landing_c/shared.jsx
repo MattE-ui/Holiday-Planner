@@ -135,6 +135,22 @@ const Ico = {
       <path d="M12 20s-7-4.4-9.2-9C1.3 7.7 3 5 5.8 5 7.7 5 9 6.2 12 9c3-2.8 4.3-4 6.2-4C21 5 22.7 7.7 21.2 11 19 15.6 12 20 12 20Z" />
     </svg>
   ),
+  ruler: (p) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M3.5 16.5 16.5 3.5l4 4-13 13zM8 9l1.6 1.6M11 6l1.6 1.6M5 12l1.6 1.6" />
+    </svg>
+  ),
+  ext: (p) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M14 4h6v6M20 4l-9 9M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10" />
+    </svg>
+  ),
+  info: (p) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5M12 7.6v.2" />
+    </svg>
+  ),
 };
 
 /** Holiday Planner wordmark — Spectral, with a small teal seal. */
