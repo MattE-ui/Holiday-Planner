@@ -132,6 +132,41 @@ a {
   }
 }
 
+/* Atelier focus rings. Default browser rings vanish against bright
+   photography, so on-photo chrome gets a dark-then-white double ring
+   (box-shadow follows the rounded shape). The transparent outline is for
+   forced-colors mode, which ignores box-shadow but paints outlines. */
+.atelier-root :is(a, button):not([data-deck-card] *):focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px hsl(198 36% 9% / 0.9),
+    0 0 0 4.5px #fff,
+    0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+/* Deck cards clip outer shadows (overflow-hidden wrappers), so focus lands
+   on the wrapper instead: a dark outline hugging the card's white border
+   forms the double ring from parts the card already has. */
+.atelier-root [data-deck-card]:focus-within {
+  outline: 3px solid hsl(198 36% 9% / 0.95);
+  outline-offset: 0;
+}
+.atelier-root [data-deck-card] :is(a, button):focus-visible {
+  outline: none;
+}
+
+/* Atelier deck: on narrower desktops the fan must stay clear of the title
+   block, so cards two-or-more steps from the active one fold away. The
+   !important is deliberate — card opacity/pointer-events are inline styles
+   computed from deck position, and this viewport constraint must win. */
+@media (min-width: 1024px) and (max-width: 1365.98px) {
+  .deck-far {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
 /* Hide the scrollbar on the mobile postcard rail without disabling scroll. */
 .no-scrollbar {
   -ms-overflow-style: none;
