@@ -1,10 +1,18 @@
-import { trips } from "@/content/trips";
+import { readTrips } from "@/lib/store";
 import { AtelierLanding, type DeckLocation } from "@/components/atelier-landing";
+import { Welcome } from "@/components/welcome";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const trips = await readTrips();
+
+  // Fresh canvas — no trips yet.
+  if (trips.length === 0) return <Welcome />;
+
   // The home page lands on the in-progress (featured) trip; the rest are "also
-  // planning". Everything is derived from the existing content model — no schema
-  // changes — and handed to the client deck as plain serialisable props.
+  // planning". Everything is derived from the content model and handed to the
+  // client deck as plain serialisable props.
   const featured = trips[0];
   const travellers = featured.travellers ?? 1;
 
@@ -16,7 +24,7 @@ export default function HomePage() {
       slug: loc.slug,
       name: loc.name,
       country: loc.country,
-      image: loc.image,
+      image: loc.image ?? loc.holidays.find((h) => h.image)?.image,
       imageAlt: loc.imageAlt,
       blurb: loc.blurb ?? "",
       // "From" price = cheapest costed holiday here; null stays honest as "Researching".

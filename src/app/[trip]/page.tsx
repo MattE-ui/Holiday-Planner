@@ -6,26 +6,34 @@ import {
   ArrowRight,
   Bed,
   CalendarDays,
+  MapPin,
+  Pencil,
   Plane,
   Plus,
   Sun,
   Thermometer,
   Waves,
 } from "lucide-react";
-import { trips, getTrip } from "@/content/trips";
+import { getTrip } from "@/lib/store";
 import type { Location } from "@/content/types";
 import { Cover } from "@/components/cover";
 import { cn, formatGBP } from "@/lib/utils";
 
-export function generateStaticParams() {
-  return trips.map((t) => ({ trip: t.slug }));
-}
+export const dynamic = "force-dynamic";
 
-export default function TripPage({ params }: { params: { trip: string } }) {
-  const trip = getTrip(params.trip);
+export default async function TripPage({ params }: { params: { trip: string } }) {
+  const trip = await getTrip(params.trip);
   if (!trip) notFound();
 
   const travellers = trip.travellers ?? 1;
+
+  // Status chip derived from the stays, not hardcoded.
+  const statuses = trip.locations.flatMap((loc) => loc.holidays.map((h) => h.status));
+  const status = statuses.includes("booked")
+    ? "Booked"
+    : statuses.some((s) => s === "shortlisted" || s === "favourite")
+      ? "Deciding together"
+      : "Just an idea";
 
   return (
     <div className="bg-background">
@@ -41,7 +49,7 @@ export default function TripPage({ params }: { params: { trip: string } }) {
         <div className="mt-3.5 flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-10">
           <div>
             <div className="mb-3">
-              <StatusChip label="Deciding together" tone="success" />
+              <StatusChip label={status} tone={status === "Just an idea" ? "idea" : "success"} />
             </div>
             <h1 className="font-display text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.02] tracking-[-0.025em] text-foreground">
               {trip.name}
@@ -59,19 +67,57 @@ export default function TripPage({ params }: { params: { trip: string } }) {
               {trip.subtitle && <span>{trip.subtitle}</span>}
             </div>
           </div>
-          <p className="max-w-[430px] text-[16.5px] leading-[1.55] text-muted-foreground [text-wrap:pretty]">
-            Three Mediterranean coastlines in the running for late-October sun — same week, same four
-            of you. Here&rsquo;s how they compare before we commit.
-          </p>
+          <div className="flex flex-col items-start gap-3 md:items-end">
+            {trip.locations.length > 0 && (
+              <p className="max-w-[430px] text-[16.5px] leading-[1.55] text-muted-foreground [text-wrap:pretty] md:text-right">
+                {trip.locations.length === 1
+                  ? "One location in the running so far — add another and the comparison begins."
+                  : `${trip.locations.length} locations in the running. Here's how they compare before you commit.`}
+              </p>
+            )}
+            <Link
+              href={`/${trip.slug}/edit`}
+              className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary transition-opacity hover:opacity-80"
+            >
+              <Pencil className="h-[14px] w-[14px]" /> Edit trip
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* ── Cinematic location bands ────────────────────────────────────── */}
-      <div>
-        {trip.locations.map((loc, i) => (
-          <LocationBand key={loc.slug} loc={loc} index={i} tripSlug={trip.slug} travellers={travellers} priority={i === 0} />
-        ))}
-      </div>
+      {trip.locations.length === 0 ? (
+        <div className="px-6 pb-10 sm:px-12">
+          <div className="rounded-[22px] border border-dashed bg-muted/40 px-6 py-20 text-center">
+            <MapPin className="mx-auto h-8 w-8 text-accent" aria-hidden />
+            <h2 className="mt-4 font-display text-2xl font-semibold">No locations yet</h2>
+            <p className="mx-auto mt-2 max-w-md text-muted-foreground">
+              Add the first place you&rsquo;re considering for {trip.name}, or import a Booking.com
+              listing and it&rsquo;ll create the location for you.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                href={`/${trip.slug}/add`}
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[14px] font-bold text-primary-foreground"
+              >
+                <Plus className="h-4 w-4" /> Add a location
+              </Link>
+              <Link
+                href={`/import?trip=${trip.slug}`}
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-input px-5 text-[14px] font-semibold text-primary hover:bg-muted"
+              >
+                Import from Booking.com
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          {trip.locations.map((loc, i) => (
+            <LocationBand key={loc.slug} loc={loc} index={i} tripSlug={trip.slug} travellers={travellers} priority={i === 0} />
+          ))}
+        </div>
+      )}
 
       {/* ── Footer action bar ───────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 px-6 py-6 text-[13.5px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-12">
@@ -79,12 +125,12 @@ export default function TripPage({ params }: { params: { trip: string } }) {
           Comparing {trip.locations.length} location{trip.locations.length === 1 ? "" : "s"} for{" "}
           {trip.name}
         </span>
-        <button
-          type="button"
+        <Link
+          href={`/${trip.slug}/add`}
           className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
         >
           <Plus className="h-[15px] w-[15px]" /> Add another location
-        </button>
+        </Link>
       </div>
     </div>
   );
@@ -166,7 +212,7 @@ function LocationBand({
         {loc.season && (
           <div className="mt-5 flex flex-wrap items-center gap-2.5">
             <span className="mr-0.5 text-[12px] font-bold uppercase tracking-[0.09em] text-white/[0.66]">
-              October
+              Season
             </span>
             <SeasonStat icon={Thermometer} value={`${loc.season.high}°`} label="day high" />
             <SeasonStat icon={Waves} value={`${loc.season.sea}°`} label="sea" />

@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
 // Content model for the Holiday Planner.
-// Everything the site renders comes from these typed structures. To add a new
-// trip, location or holiday, edit src/content/trips.ts — no component changes
-// needed.
+// Everything the site renders comes from these typed structures. Data lives in
+// data/trips.json, managed through src/lib/store.ts and the server actions in
+// src/lib/actions.ts — trips, locations and stays are created in the app.
 // ---------------------------------------------------------------------------
 
 export type HolidayStatus = "idea" | "shortlisted" | "favourite" | "booked";
@@ -62,6 +62,11 @@ export interface Holiday {
   photos?: string[];
   /** Guest/host rating shown as a badge, e.g. "9.3 / 10". */
   rating?: string;
+
+  /** Street address as shown on the listing (used under the map). */
+  address?: string;
+  /** Exact position of the accommodation, e.g. parsed from a Booking.com page. */
+  coords?: { lat: number; lng: number };
 
   accommodation: Accommodation;
 

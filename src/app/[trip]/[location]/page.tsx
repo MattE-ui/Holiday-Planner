@@ -18,14 +18,14 @@ import {
   Users,
   Waves,
 } from "lucide-react";
-import { trips, getLocation } from "@/content/trips";
+import { getLocation } from "@/lib/store";
+import { deleteLocation } from "@/lib/actions";
 import { Cover } from "@/components/cover";
+import { DeleteButton } from "@/components/delete-button";
 import { cn, formatGBP } from "@/lib/utils";
 import type { Holiday, HolidayStatus } from "@/content/types";
 
-export function generateStaticParams() {
-  return trips.flatMap((t) => t.locations.map((l) => ({ trip: t.slug, location: l.slug })));
-}
+export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<HolidayStatus, string> = {
   idea: "Researching",
@@ -61,8 +61,12 @@ function cancellationLine(h: Holiday): string {
   return m ? `Free cancellation until ${m[1]}` : "Free cancellation available";
 }
 
-export default function LocationPage({ params }: { params: { trip: string; location: string } }) {
-  const { trip, location } = getLocation(params.trip, params.location);
+export default async function LocationPage({
+  params,
+}: {
+  params: { trip: string; location: string };
+}) {
+  const { trip, location } = await getLocation(params.trip, params.location);
   if (!trip || !location) notFound();
 
   const travellers = trip.travellers ?? 4;
@@ -78,12 +82,26 @@ export default function LocationPage({ params }: { params: { trip: string; locat
             <Bed className="mx-auto h-8 w-8 text-accent" aria-hidden />
             <h2 className="mt-4 font-display text-2xl font-semibold">No stays added here yet</h2>
             <p className="mx-auto mt-2 max-w-md text-muted-foreground">
-              Send a listing link for {location.name} and it&apos;ll appear here as a full stay —
-              specs, photos and an honest price breakdown.
+              Import a Booking.com listing for {location.name} and it&apos;ll appear here as a full
+              stay — specs, photos and an honest price breakdown — or add one by hand.
             </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                href={`/import?trip=${trip.slug}&location=${location.slug}`}
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[14px] font-bold text-primary-foreground"
+              >
+                Import from Booking.com
+              </Link>
+              <Link
+                href={`/${trip.slug}/${location.slug}/add`}
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-input px-5 text-[14px] font-semibold text-primary hover:bg-muted"
+              >
+                <Plus className="h-4 w-4" /> Add a stay by hand
+              </Link>
+            </div>
           </div>
         </div>
-        <Footer />
+        <Footer trip={trip} location={location} />
       </div>
     );
   }
@@ -129,7 +147,7 @@ export default function LocationPage({ params }: { params: { trip: string; locat
         </>
       )}
 
-      <Footer />
+      <Footer trip={trip} location={location} />
     </div>
   );
 }
@@ -540,19 +558,34 @@ function Dot() {
 
 /** In-content action bar — matches the trip page's footer row; the global site
  *  footer sits below it. */
-function Footer() {
+function Footer({
+  trip,
+  location,
+}: {
+  trip: { slug: string };
+  location: { slug: string; name: string };
+}) {
   return (
     <div className="flex flex-col gap-3 px-6 py-6 text-[13px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-12">
       <span>
         Prices are party totals for the stay · figures shown as &ldquo;to confirm&rdquo; aren&rsquo;t
         quoted yet
       </span>
-      <button
-        type="button"
-        className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
-      >
-        <Plus className="h-[15px] w-[15px]" /> Add another stay
-      </button>
+      <div className="flex flex-wrap items-center gap-4">
+        <DeleteButton
+          action={deleteLocation.bind(null, trip.slug, location.slug)}
+          confirmText={`Remove ${location.name} and all its stays from this trip?`}
+          className="h-auto border-0 px-0 text-[13px] hover:bg-transparent hover:opacity-80"
+        >
+          Remove location
+        </DeleteButton>
+        <Link
+          href={`/${trip.slug}/${location.slug}/add`}
+          className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
+        >
+          <Plus className="h-[15px] w-[15px]" /> Add another stay
+        </Link>
+      </div>
     </div>
   );
 }

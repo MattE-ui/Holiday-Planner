@@ -56,6 +56,62 @@ export function AtelierLanding({
   const railRef = useRef<HTMLDivElement>(null);
   const activeLoc = locations[active];
 
+  // A trip with no locations yet — keep the cinematic register, invite the
+  // first location instead of rendering an empty deck.
+  if (!activeLoc) {
+    return (
+      <div className="relative flex min-h-[100svh] w-full flex-col overflow-hidden bg-[hsl(198_36%_9%)] text-white">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[radial-gradient(120%_90%_at_70%_10%,hsl(190_45%_22%)_0%,hsl(198_38%_12%)_55%,hsl(198_36%_8%)_100%)]"
+        />
+        <div className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10">
+          <Wordmark />
+          <Link
+            href="/new"
+            className="inline-flex h-[38px] items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 text-[13.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+          >
+            <Plus className="h-[15px] w-[15px]" /> Add a trip
+          </Link>
+        </div>
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-24 text-center">
+          <StatusChip label={status} />
+          <h1 className="mt-5 max-w-[640px] font-display text-[clamp(2.25rem,6vw,4rem)] font-semibold leading-[1.02] tracking-[-0.025em]">
+            {tripName}
+          </h1>
+          {tripWindow && (
+            <p className="mt-4 inline-flex items-center gap-2 text-[15px] text-white/[0.78]">
+              <CalendarDays className="h-[17px] w-[17px]" /> {tripWindow}
+            </p>
+          )}
+          <p className="mt-5 max-w-[440px] text-[15.5px] leading-[1.6] text-white/[0.72]">
+            No locations in the running yet — add the first place you&rsquo;re considering and the
+            comparison starts here.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href={`/${tripSlug}/add`}
+              className="inline-flex h-[52px] items-center gap-2.5 rounded-full bg-white px-[26px] text-[16px] font-bold text-primary shadow-[0_12px_30px_rgba(0,0,0,0.3)] transition-transform duration-300 hover:-translate-y-0.5"
+            >
+              <MapPin className="h-[18px] w-[18px]" /> Add a location
+            </Link>
+            <Link
+              href="/import"
+              className="inline-flex h-[52px] items-center gap-2.5 rounded-full border border-white/40 bg-white/10 px-[26px] text-[15px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            >
+              Import from Booking.com
+            </Link>
+          </div>
+          {upcomingCount > 0 && (
+            <Link href="/trips" className="mt-8 text-[13.5px] font-semibold text-white/70 hover:text-white">
+              All trips · {upcomingCount + 1}
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // Mobile: select AND smooth-scroll the card to centre (never scrollIntoView).
   const pick = (i: number) => {
     setActive(i);
@@ -95,12 +151,22 @@ export function AtelierLanding({
       {/* ── Desktop top bar ─────────────────────────────────────────────── */}
       <div className="absolute inset-x-0 top-0 z-40 hidden items-center justify-between px-10 py-[22px] md:flex">
         <Wordmark />
-        <button
-          type="button"
-          className="inline-flex h-[38px] items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 text-[13.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-        >
-          <Plus className="h-[15px] w-[15px]" /> Add a trip
-        </button>
+        <div className="flex items-center gap-3">
+          {upcomingCount > 0 && (
+            <Link
+              href="/trips"
+              className="inline-flex h-[38px] items-center gap-2 rounded-full px-4 text-[13.5px] font-semibold text-white/85 transition-colors hover:text-white"
+            >
+              All trips · {upcomingCount + 1}
+            </Link>
+          )}
+          <Link
+            href="/new"
+            className="inline-flex h-[38px] items-center gap-2 rounded-full border border-white/45 bg-white/10 px-4 text-[13.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+          >
+            <Plus className="h-[15px] w-[15px]" /> Add a trip
+          </Link>
+        </div>
       </div>
 
       {/* ── Desktop title block (lower-left) ────────────────────────────── */}
@@ -175,7 +241,10 @@ export function AtelierLanding({
       {/* ── Mobile top bar ──────────────────────────────────────────────── */}
       <div className="absolute inset-x-[18px] top-[calc(env(safe-area-inset-top,0px)+16px)] z-10 flex items-center justify-between md:hidden">
         <Wordmark />
-        <span className="inline-flex h-[34px] items-center gap-1.5 rounded-full border border-white/[0.34] bg-white/12 px-3 text-[12px] font-semibold text-white backdrop-blur-sm">
+        <Link
+          href={upcomingCount > 0 ? "/trips" : "/new"}
+          className="inline-flex h-[34px] items-center gap-1.5 rounded-full border border-white/[0.34] bg-white/12 px-3 text-[12px] font-semibold text-white backdrop-blur-sm"
+        >
           {upcomingCount > 0 ? (
             <>
               <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
@@ -186,7 +255,7 @@ export function AtelierLanding({
               <Plus className="h-[13px] w-[13px]" /> Add a trip
             </>
           )}
-        </span>
+        </Link>
       </div>
 
       {/* ── Mobile title block ──────────────────────────────────────────── */}

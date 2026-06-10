@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plane } from "lucide-react";
+import { Link2, Plane, Plus } from "lucide-react";
 
 export function SiteHeader() {
   return (
@@ -11,7 +11,26 @@ export function SiteHeader() {
           </span>
           Holiday Planner
         </Link>
-        <span className="text-sm text-muted-foreground">Compare. Decide. Book.</span>
+        <nav className="flex items-center gap-1 sm:gap-2">
+          <Link
+            href="/trips"
+            className="rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            All trips
+          </Link>
+          <Link
+            href="/import"
+            className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+          >
+            <Link2 className="h-4 w-4" /> Import
+          </Link>
+          <Link
+            href="/new"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-soft transition-transform duration-300 hover:-translate-y-0.5"
+          >
+            <Plus className="h-4 w-4" /> New trip
+          </Link>
+        </nav>
       </div>
     </header>
   );

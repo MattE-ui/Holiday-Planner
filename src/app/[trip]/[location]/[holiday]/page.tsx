@@ -7,9 +7,10 @@ import {
   CalendarDays,
   Check,
   ExternalLink,
-  Heart,
+  Footprints,
   Info,
   MapPin,
+  Pencil,
   Plane,
   Plus,
   Ruler,
@@ -17,19 +18,15 @@ import {
   Star,
   Waves,
 } from "lucide-react";
-import { trips, getHoliday } from "@/content/trips";
+import { getHoliday } from "@/lib/store";
+import { setStayStatus } from "@/lib/actions";
 import { buildBreakdown } from "@/lib/pricing";
 import { cn, formatGBP } from "@/lib/utils";
 import { AccommodationGallery } from "@/components/accommodation-gallery";
+import { StatusPicker } from "@/components/status-picker";
 import type { Holiday, HolidayStatus, Location } from "@/content/types";
 
-export function generateStaticParams() {
-  return trips.flatMap((t) =>
-    t.locations.flatMap((l) =>
-      l.holidays.map((h) => ({ trip: t.slug, location: l.slug, holiday: h.slug })),
-    ),
-  );
-}
+export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<HolidayStatus, string> = {
   idea: "Researching",
@@ -38,12 +35,12 @@ const STATUS_LABEL: Record<HolidayStatus, string> = {
   booked: "Booked",
 };
 
-export default function HolidayPage({
+export default async function HolidayPage({
   params,
 }: {
   params: { trip: string; location: string; holiday: string };
 }) {
-  const { trip, location, holiday } = getHoliday(params.trip, params.location, params.holiday);
+  const { trip, location, holiday } = await getHoliday(params.trip, params.location, params.holiday);
   if (!trip || !location || !holiday) notFound();
 
   const travellers = trip.travellers ?? 4;
@@ -132,18 +129,24 @@ export default function HolidayPage({
           )}
 
           <Section title="Where it is">
-            <WhereItIs location={location} walk={walk} />
+            <WhereItIs location={location} holiday={holiday} walk={walk} />
           </Section>
         </div>
 
-        <PriceSidebar holiday={holiday} travellers={travellers} />
+        <PriceSidebar
+          holiday={holiday}
+          travellers={travellers}
+          tripSlug={trip.slug}
+          locationSlug={location.slug}
+          statusAction={setStayStatus.bind(null, trip.slug, location.slug, holiday.slug)}
+        />
       </div>
 
       {/* In-content action bar — the global footer sits below it. */}
       <div className="mt-2 flex flex-col gap-3 px-6 py-6 text-[13px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-12">
         <span>Unconfirmed costs are shown honestly as &ldquo;to confirm&rdquo; — never an invented figure.</span>
         <Link
-          href={`/${trip.slug}/${location.slug}`}
+          href={`/${trip.slug}/${location.slug}/add`}
           className="inline-flex items-center gap-1.5 self-start font-semibold text-primary transition-opacity hover:opacity-80"
         >
           <Plus className="h-[15px] w-[15px]" /> Compare another stay
@@ -224,8 +227,7 @@ function EssentialsSection({
         label={a.modern ? "Recently renovated" : undefined}
       />,
     );
-  if (a.privatePool)
-    cells.push(<Essential key="pool" icon={Waves} value="Private pool" label="Sea-view" />);
+  if (a.privatePool) cells.push(<Essential key="pool" icon={Waves} value="Private pool" />);
   if (a.airCon) cells.push(<Essential key="ac" icon={Snowflake} value="Air conditioning" />);
   if (location.flightTime)
     cells.push(
@@ -295,10 +297,27 @@ function ProsConsPanel({
   );
 }
 
-/** "Where it is": a real map embed + a fact strip of the distances we know. */
-function WhereItIs({ location, walk }: { location: Location; walk?: string }) {
+/** "Where it is": a real map embed + a fact strip of the distances we know.
+ *  With coordinates (e.g. from a Booking.com import) the map pins the exact
+ *  accommodation; otherwise it falls back to the town. Either way a button
+ *  opens the same spot in full Google Maps to look around. */
+function WhereItIs({
+  location,
+  holiday,
+  walk,
+}: {
+  location: Location;
+  holiday: Holiday;
+  walk?: string;
+}) {
   const place = `${location.name}, ${location.country}`;
-  const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(place)}&z=12&output=embed`;
+  const coords = holiday.coords;
+  const mapSrc = coords
+    ? `https://www.google.com/maps?q=${coords.lat},${coords.lng}&z=16&output=embed`
+    : `https://www.google.com/maps?q=${encodeURIComponent(place)}&z=12&output=embed`;
+  const openHref = coords
+    ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${holiday.name}, ${place}`)}`;
 
   // Pull the harbour/town and beach distances out of the free-text walk line.
   const segments = walk?.split(";").map((s) => s.trim()) ?? [];
@@ -306,7 +325,9 @@ function WhereItIs({ location, walk }: { location: Location; walk?: string }) {
   const beachLine = segments.find((s) => /beach|sea/i.test(s));
 
   const facts: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }[] = [];
-  if (townLine) facts.push({ icon: MapPin, label: "Town & harbour", value: townLine });
+  if (holiday.address) facts.push({ icon: MapPin, label: "Address", value: holiday.address });
+  if (townLine && townLine !== holiday.address)
+    facts.push({ icon: Footprints, label: "Town & amenities", value: townLine });
   if (location.airport)
     facts.push({
       icon: Plane,
@@ -315,17 +336,32 @@ function WhereItIs({ location, walk }: { location: Location; walk?: string }) {
         ? `${location.airport.split(" · ")[0]} · ${location.flightTime.replace(/^~/, "")} flights`
         : location.airport,
     });
-  if (beachLine) facts.push({ icon: Waves, label: "Beach", value: beachLine });
+  if (beachLine && facts.length < 3) facts.push({ icon: Waves, label: "Beach", value: beachLine });
 
   return (
     <div className="overflow-hidden rounded-2xl border">
-      <iframe
-        title={`Map of ${place}`}
-        src={mapSrc}
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        className="block h-[230px] w-full border-0 grayscale-[0.15]"
-      />
+      <div className="relative">
+        <iframe
+          title={coords ? `Map showing ${holiday.name}` : `Map of ${place}`}
+          src={mapSrc}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          className="block h-[290px] w-full border-0 grayscale-[0.15]"
+        />
+        <a
+          href={openHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-3.5 right-3.5 inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-bold text-primary shadow-lift transition-transform duration-300 hover:-translate-y-0.5"
+        >
+          Open in Google Maps <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+        </a>
+        {!coords && (
+          <span className="absolute left-3.5 top-3.5 rounded-full bg-[rgba(8,28,34,0.6)] px-3 py-1.5 text-[11.5px] font-semibold text-white backdrop-blur-sm">
+            Approximate — showing {location.name}; add coordinates for the exact spot
+          </span>
+        )}
+      </div>
       {facts.length > 0 && (
         <div
           className={cn(
@@ -369,8 +405,20 @@ function PriceLine({ label, detail, amount }: { label: string; detail?: string; 
 }
 
 /** The honest price sidebar — headline accommodation total, full per-line
- *  breakdown, what's confirmed so far, and the listing/favourite actions. */
-function PriceSidebar({ holiday, travellers }: { holiday: Holiday; travellers: number }) {
+ *  breakdown, what's confirmed so far, status and the listing/edit actions. */
+function PriceSidebar({
+  holiday,
+  travellers,
+  tripSlug,
+  locationSlug,
+  statusAction,
+}: {
+  holiday: Holiday;
+  travellers: number;
+  tripSlug: string;
+  locationSlug: string;
+  statusAction: (status: HolidayStatus) => Promise<void>;
+}) {
   const b = buildBreakdown(holiday, travellers);
   const total = holiday.accommodationTotal ?? null;
   const nights = holiday.nights ?? null;
@@ -443,6 +491,12 @@ function PriceSidebar({ holiday, travellers }: { holiday: Holiday; travellers: n
           </div>
         )}
 
+        {/* Status */}
+        <div className="border-t p-[16px_24px]">
+          <div className="mb-2.5 text-[13px] text-muted-foreground">Where this stay stands</div>
+          <StatusPicker status={holiday.status ?? "idea"} action={statusAction} />
+        </div>
+
         {/* Actions */}
         <div className="flex flex-col gap-2.5 p-[16px_24px_22px]">
           {holiday.listingUrl && (
@@ -455,11 +509,12 @@ function PriceSidebar({ holiday, travellers }: { holiday: Holiday; travellers: n
               Open listing <ExternalLink className="h-[17px] w-[17px]" />
             </a>
           )}
-          {holiday.status === "favourite" && (
-            <span className="inline-flex h-[46px] items-center justify-center gap-2 rounded-full border border-[hsl(193_40%_60%)] bg-[hsl(190_40%_96%)] text-[14.5px] font-bold text-primary">
-              <Heart className="h-4 w-4 fill-current" aria-hidden /> Saved as favourite
-            </span>
-          )}
+          <Link
+            href={`/${tripSlug}/${locationSlug}/${holiday.slug}/edit`}
+            className="inline-flex h-[46px] items-center justify-center gap-2 rounded-full border border-input text-[14.5px] font-bold text-primary transition-colors hover:bg-muted"
+          >
+            <Pencil className="h-4 w-4" aria-hidden /> Edit details & costs
+          </Link>
         </div>
       </div>
       <p className="mx-1 mt-3 text-center text-xs text-muted-foreground">
