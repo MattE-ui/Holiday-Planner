@@ -7,6 +7,11 @@ const nextConfig = {
       // client-side first, but allow headroom for the fallback.
       bodySizeLimit: "10mb",
     },
+    // data/trips.json must ship in the serverless bundle: it's the local dev
+    // store and the one-time seed for a fresh production database.
+    outputFileTracingIncludes: {
+      "/**": ["./data/**"],
+    },
   },
   images: {
     remotePatterns: [

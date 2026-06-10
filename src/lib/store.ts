@@ -1,29 +1,24 @@
-import { promises as fs } from "fs";
-import path from "path";
 import type { Holiday, Location, Trip } from "@/content/types";
+import * as fileStore from "@/lib/store-file";
+import * as pgStore from "@/lib/store-pg";
 
 // ---------------------------------------------------------------------------
-// JSON file store. The whole content tree lives in data/trips.json so the app
-// starts as a fresh canvas and everything created in the UI survives restarts.
-// Server-only: import this from server components and server actions.
+// Trip store — the single API the app talks to. Server-only: import this from
+// server components and server actions.
+//
+// Backend is chosen by environment: with DATABASE_URL / POSTGRES_URL set the
+// Postgres (Neon) backend is used — required in production, where the
+// serverless filesystem is read-only — otherwise the JSON file backend keeps
+// local development zero-setup (data/trips.json). Both implement the same
+// function set, and a fresh database seeds itself from the committed JSON.
 // ---------------------------------------------------------------------------
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "trips.json");
+const usePostgres = Boolean(process.env.DATABASE_URL ?? process.env.POSTGRES_URL);
+const backend = usePostgres ? pgStore : fileStore;
 
-export async function readTrips(): Promise<Trip[]> {
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf8");
-    return JSON.parse(raw) as Trip[];
-  } catch {
-    return []; // no file yet — a fresh canvas
-  }
-}
+export { slugify, uniqueSlug } from "@/lib/slugs";
 
-async function writeTrips(trips: Trip[]): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(trips, null, 2), "utf8");
-}
+export const readTrips = (): Promise<Trip[]> => backend.readTrips();
 
 // ---- lookups ---------------------------------------------------------------
 
@@ -43,135 +38,47 @@ export async function getHoliday(tripSlug: string, locationSlug: string, holiday
   return { trip, location, holiday };
 }
 
-// ---- slugs ------------------------------------------------------------------
-
-/** Route segments that must never be shadowed by a generated slug. */
-const RESERVED = new Set(["new", "import", "trips", "add", "edit", "api"]);
-
-export function slugify(name: string): string {
-  const base = name
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "") // strip combining accents
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return base || "untitled";
-}
-
-export function uniqueSlug(name: string, taken: Iterable<string>): string {
-  const existing = new Set(taken);
-  let slug = slugify(name);
-  if (RESERVED.has(slug)) slug = `${slug}-1`;
-  let candidate = slug;
-  for (let n = 2; existing.has(candidate); n++) candidate = `${slug}-${n}`;
-  return candidate;
-}
-
 // ---- mutations ---------------------------------------------------------------
 
-export async function addTrip(trip: Omit<Trip, "slug" | "locations">): Promise<Trip> {
-  const trips = await readTrips();
-  const slug = uniqueSlug(trip.name, trips.map((t) => t.slug));
-  const created: Trip = { ...trip, slug, locations: [] };
-  await writeTrips([...trips, created]);
-  return created;
-}
+export const addTrip = (trip: Omit<Trip, "slug" | "locations">): Promise<Trip> =>
+  backend.addTrip(trip);
 
-export async function updateTrip(
+export const updateTrip = (
   tripSlug: string,
   patch: Partial<Omit<Trip, "slug" | "locations">>,
-): Promise<void> {
-  const trips = await readTrips();
-  const trip = trips.find((t) => t.slug === tripSlug);
-  if (!trip) throw new Error(`Trip not found: ${tripSlug}`);
-  Object.assign(trip, patch);
-  await writeTrips(trips);
-}
+): Promise<void> => backend.updateTrip(tripSlug, patch);
 
-export async function deleteTrip(tripSlug: string): Promise<void> {
-  const trips = await readTrips();
-  await writeTrips(trips.filter((t) => t.slug !== tripSlug));
-}
+export const deleteTrip = (tripSlug: string): Promise<void> => backend.deleteTrip(tripSlug);
 
-export async function addLocation(
+export const addLocation = (
   tripSlug: string,
   location: Omit<Location, "slug" | "holidays">,
-): Promise<Location> {
-  const trips = await readTrips();
-  const trip = trips.find((t) => t.slug === tripSlug);
-  if (!trip) throw new Error(`Trip not found: ${tripSlug}`);
-  const slug = uniqueSlug(location.name, trip.locations.map((l) => l.slug));
-  const created: Location = { ...location, slug, holidays: [] };
-  trip.locations.push(created);
-  await writeTrips(trips);
-  return created;
-}
+): Promise<Location> => backend.addLocation(tripSlug, location);
 
-export async function updateLocation(
+export const updateLocation = (
   tripSlug: string,
   locationSlug: string,
   patch: Partial<Omit<Location, "slug" | "holidays">>,
-): Promise<void> {
-  const trips = await readTrips();
-  const location = trips
-    .find((t) => t.slug === tripSlug)
-    ?.locations.find((l) => l.slug === locationSlug);
-  if (!location) throw new Error(`Location not found: ${tripSlug}/${locationSlug}`);
-  Object.assign(location, patch);
-  await writeTrips(trips);
-}
+): Promise<void> => backend.updateLocation(tripSlug, locationSlug, patch);
 
-export async function deleteLocation(tripSlug: string, locationSlug: string): Promise<void> {
-  const trips = await readTrips();
-  const trip = trips.find((t) => t.slug === tripSlug);
-  if (!trip) return;
-  trip.locations = trip.locations.filter((l) => l.slug !== locationSlug);
-  await writeTrips(trips);
-}
+export const deleteLocation = (tripSlug: string, locationSlug: string): Promise<void> =>
+  backend.deleteLocation(tripSlug, locationSlug);
 
-export async function addHoliday(
+export const addHoliday = (
   tripSlug: string,
   locationSlug: string,
   holiday: Omit<Holiday, "slug">,
-): Promise<Holiday> {
-  const trips = await readTrips();
-  const location = trips
-    .find((t) => t.slug === tripSlug)
-    ?.locations.find((l) => l.slug === locationSlug);
-  if (!location) throw new Error(`Location not found: ${tripSlug}/${locationSlug}`);
-  const slug = uniqueSlug(holiday.name, location.holidays.map((h) => h.slug));
-  const created: Holiday = { ...holiday, slug };
-  location.holidays.push(created);
-  await writeTrips(trips);
-  return created;
-}
+): Promise<Holiday> => backend.addHoliday(tripSlug, locationSlug, holiday);
 
-export async function updateHoliday(
+export const updateHoliday = (
   tripSlug: string,
   locationSlug: string,
   holidaySlug: string,
   patch: Partial<Omit<Holiday, "slug">>,
-): Promise<void> {
-  const trips = await readTrips();
-  const holiday = trips
-    .find((t) => t.slug === tripSlug)
-    ?.locations.find((l) => l.slug === locationSlug)
-    ?.holidays.find((h) => h.slug === holidaySlug);
-  if (!holiday) throw new Error(`Stay not found: ${tripSlug}/${locationSlug}/${holidaySlug}`);
-  Object.assign(holiday, patch);
-  await writeTrips(trips);
-}
+): Promise<void> => backend.updateHoliday(tripSlug, locationSlug, holidaySlug, patch);
 
-export async function deleteHoliday(
+export const deleteHoliday = (
   tripSlug: string,
   locationSlug: string,
   holidaySlug: string,
-): Promise<void> {
-  const trips = await readTrips();
-  const location = trips
-    .find((t) => t.slug === tripSlug)
-    ?.locations.find((l) => l.slug === locationSlug);
-  if (!location) return;
-  location.holidays = location.holidays.filter((h) => h.slug !== holidaySlug);
-  await writeTrips(trips);
-}
+): Promise<void> => backend.deleteHoliday(tripSlug, locationSlug, holidaySlug);
