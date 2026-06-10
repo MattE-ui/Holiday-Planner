@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 190 30% 98%;
+  --foreground: 198 32% 14%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 198 32% 14%;
+
+  --primary: 193 52% 25%;
+  --primary-foreground: 0 0% 100%;
+
+  --accent: 190 45% 34%;
+  --accent-foreground: 0 0% 100%;
+
+  --muted: 195 25% 94%;
+  --muted-foreground: 199 14% 42%;
+
+  --border: 196 24% 88%;
+  --input: 196 24% 88%;
+  --ring: 190 45% 34%;
+
+  --success: 142 58% 30%;
+  --warning: 33 90% 38%;
+  --danger: 0 62% 42%;
+
+  --radius: 1rem;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+}
+
+.dark {
+  --background: 198 36% 9%;
+  --foreground: 190 24% 94%;
+
+  --card: 198 30% 12%;
+  --card-foreground: 190 24% 94%;
+
+  --primary: 188 58% 46%;
+  --primary-foreground: 198 40% 8%;
+
+  --accent: 188 48% 52%;
+  --accent-foreground: 198 40% 8%;
+
+  --muted: 198 22% 18%;
+  --muted-foreground: 195 16% 66%;
+
+  --border: 198 22% 22%;
+  --input: 198 22% 22%;
+  --ring: 188 48% 52%;
+
+  --success: 142 48% 52%;
+  --warning: 38 92% 58%;
+  --danger: 0 70% 64%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
