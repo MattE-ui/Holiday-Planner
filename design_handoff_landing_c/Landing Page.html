@@ -57,6 +57,7 @@
 <script type="text/babel" src="directionC-mobile.jsx"></script>
 <script type="text/babel" src="directionC-many.jsx"></script>
 <script type="text/babel" src="locations-screen.jsx"></script>
+<script type="text/babel" src="accommodations-screen.jsx"></script>
 
 <script type="text/babel">
   const { DesignCanvas, DCSection, DCArtboard } = window;
@@ -112,6 +113,16 @@
         >
           <DCArtboard id="loc-desktop" label="Autumn Holiday 2026 — locations on the shortlist" width={W} height={1880}>
             <window.LocationsScreen />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="trip-accommodations"
+          title="Location · Accommodations"
+          subtitle="What opens from 'View accommodations' on a location. The stays you're comparing for Kalkan, side by side — photo, rating, key specs, and the honest price (or 'price to confirm'). Hover a card; click 'View details' for the full accommodation."
+        >
+          <DCArtboard id="accom-desktop" label="Kalkan — 3 stays being compared" width={W} height={1240}>
+            <window.AccommodationsScreen />
           </DCArtboard>
         </DCSection>
       </DesignCanvas>

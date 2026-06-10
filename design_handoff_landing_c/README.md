@@ -113,6 +113,45 @@ content model** — add them to the `Location` type (or fetch from a climate sou
 "honest about cost / time of year" tone. `accomm` (count) and `from` (min costed price, or null) derive
 from the location's `holidays`.
 
+### 5. Accommodations (location page) — `src/app/[trip]/[location]/page.tsx`
+**Route:** opens from "View accommodations" on a location. **Purpose:** compare the stays in the
+running for one location, with the favourite given clear prominence, then choose one to view in full.
+
+**Layout** — light seafoam page; sticky nav (as Locations); content padded `0 48px`.
+- **Header:** "‹ {trip} · all locations" back link → `/{trip}`; a row with `<h1>` "Staying in {location},
+  {country}" (Spectral 600 / 50px, country italic 30px) + a meta line (bed "{n} stays being compared" ·
+  cal "{nights} nights · {dates}" · users "{travellers} guests"); on the right a small "Costed options
+  from £X · party total · ~£Ypp" block (min costed total).
+- **Featured stay** (the favourite) — a large card, `border:2px solid hsl(193 52% 25%)`,
+  `min-height:480; border-radius:22; flex`:
+  - **Left 56%:** full-bleed `next/image`; overlays — `StatusChip` + a filled-heart circle (top-left),
+    "★ {rating}" white pill (top-right), "{n} photos" dark glass pill (bottom-right). Slow-zoom on hover.
+  - **Right panel** (`padding:34px 38px; flex column; justify-between`): uppercase accent eyebrow
+    "Our front-runner"; name (Spectral 600 / 36px); summary (15.5px); spec chips (see below); up to **3
+    pros** each with a green (`hsl(142 58% 32%)`) check icon + a `MapPin` walk line; then a bottom block
+    (border-top) with **£{total}** (Spectral 36px) + "total · {nights} nights", "~£Xpp · ~£Y/night", a
+    green "✓ {cancel}" line, and a teal **"View full details →"** button → accommodation detail route.
+- **"Also in the running"** heading (Spectral 24) + "{n} more being compared", then the remaining stays
+  in a **2-column grid** (`gap:24`) of **horizontal tiles** (`min-height:208; flex; radius:16`):
+  - **Left image** (248px fixed): `StatusChip` (top-left), "★ {rating}" pill (top-right), "{n}" photo
+    pill (bottom-right).
+  - **Right** (`padding:18px 20px; justify-between`): name (Spectral 21), 2-line-clamped summary, small
+    spec chips; then a price line — **£{total} · ~£Xpp** + green "✓ {cancel}", OR "Price to confirm" +
+    an amber (`hsl(33 90% 34%)`) dot + quote note — and an outline **"Details →"** button. Hover lifts.
+- **Footer:** "Prices are party totals · figures shown as 'to confirm' aren't quoted yet" + "+ Add
+  another stay".
+
+**Spec chips** (`SpecChip`): pill `bg hsl(195 25% 94%); color hsl(198 28% 22%); radius:9; 12.5px/600`
+with a muted icon — bedrooms (bed), sleeps (users), bathrooms (bath), private pool (waves), A/C
+(snowflake).
+
+**Data:** stays are the location's `holidays`. Derive `rating` (`holiday.rating`), `photoCount`
+(image count), specs from `holiday.accommodation`, `total`/`perPerson`(/travellers)/`perNight`(/nights),
+`cancel` (from `rateNote`), `pros`/`cons`. **Favourite** = holiday with `status:"favourite"` (fall back
+to first/highest-rated). **Honest cost:** `total === null` → render "Price to confirm" + quote note,
+never a number. (The prototype's `staysByLocation.kalkan` mirrors this; Villa Veranda is the real seed
+listing, the other two are placeholder comparison candidates.)
+
 ---
 
 ## Component: Location deck (the signature interaction)
@@ -229,8 +268,10 @@ instead of a broken image — this already exists as the `Cover` component
 - `directionC-mobile.jsx` — mobile hero + **swipe rail** + dots.
 - `locations-screen.jsx` — **Locations / trip page**: editorial header + cinematic location bands
   (`LocationsScreen`, `LocationBand`, `SeasonStat`).
-- `shared.jsx` — `SmartImage` (photo w/ gradient fallback), `Ico` (icons inc. thermo/sun/wave),
-  `Wordmark`, `StatusChip`.
+- `accommodations-screen.jsx` — **Accommodations / location page**: large featured stay + smaller
+  horizontal tiles (`AccommodationsScreen`, `FeaturedStay`, `CompactStay`, `SpecChip`).
+- `shared.jsx` — `SmartImage` (photo w/ gradient fallback), `Ico` (icons inc. thermo/sun/wave/star/
+  bath/users/snow/camera/check/heart), `Wordmark`, `StatusChip`.
 - `data.js` — the demo data shape (mirrors your `trips.ts`; in the app, read from `trips.ts`).
 
 > Implement against your repo's real components and routes — the HTML here is the reference, your

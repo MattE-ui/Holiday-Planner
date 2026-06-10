@@ -57,6 +57,9 @@ export interface Holiday {
   image?: string;
   /** Alt text for `image`. Describe the scene; it's part of the voice. */
   imageAlt?: string;
+  /** Extra listing photos beyond the cover. Length (+ the cover) drives the
+   *  "{n} photos" badge — only stored images are counted, never an invented total. */
+  photos?: string[];
   /** Guest/host rating shown as a badge, e.g. "9.3 / 10". */
   rating?: string;
 

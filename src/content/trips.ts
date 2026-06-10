@@ -37,7 +37,7 @@ export const trips: Trip[] = [
           {
             slug: "kalkan-villa-veranda",
             name: "Kalkan Villa Veranda",
-            status: "shortlisted",
+            status: "favourite",
             rating: "9.3 / 10",
             summary:
               "Recently renovated single-storey villa on a quiet road above the Yali/Likya beach clubs, with a sea-view pool and a short walk down to the harbour.",
@@ -72,8 +72,78 @@ export const trips: Trip[] = [
               "£2,304 free-cancellation rate (free cancel before 29 Sep). Non-refundable rate £1,924. Was £2,589.",
             flights: [],
             // carHire, transfers to be added as research continues
-            pros: [],
+            pros: ["Sea-view private pool", "Single-storey — no stairs", "Recently renovated"],
             cons: ["2 bedrooms rather than 3 (sleeps 4 across 1 double + 3 singles)"],
+            notes: "",
+          },
+          {
+            slug: "kalkan-villa-likya-heights",
+            name: "Villa Likya Heights",
+            status: "shortlisted",
+            rating: "9.1 / 10",
+            summary:
+              "Three-bedroom villa higher up the slope with panoramic harbour views, an infinity pool and a big shaded terrace for evening meals.",
+            // Representative image — swap for the listing's own photos.
+            image:
+              "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1600&q=80",
+            imageAlt: "A villa with an infinity pool overlooking the sea at dusk",
+            accommodation: {
+              bedrooms: 3,
+              sleeps: 6,
+              bathrooms: 3,
+              privatePool: true,
+              airCon: true,
+              walkToAmenities: "~20 min downhill to town & harbour",
+              sizeSqft: 1500,
+              extras: [
+                "Infinity pool with sea views",
+                "Large shaded dining terrace",
+                "Free WiFi",
+                "Air conditioning throughout",
+              ],
+            },
+            nights: 5,
+            dates: "4–9 Oct 2026",
+            accommodationTotal: 2680,
+            rateNote: "Free cancellation until 27 Sep.",
+            flights: [],
+            pros: [
+              "3 bedrooms — room to spread out",
+              "Infinity pool & sea views",
+              "Large shaded dining terrace",
+            ],
+            cons: ["Steep walk back up from town", "Pricier per person"],
+            notes: "",
+          },
+          {
+            slug: "kalkan-villa-mavi",
+            name: "Villa Mavi",
+            status: "idea",
+            rating: "8.8 / 10",
+            summary:
+              "Modern two-bed moments from the old town and harbour — walkable to everything, with a compact private pool and a roof terrace for sundowners.",
+            // Representative image — swap for the listing's own photos.
+            image:
+              "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1600&q=80",
+            imageAlt: "A modern whitewashed villa with a compact private pool and roof terrace",
+            accommodation: {
+              bedrooms: 2,
+              sleeps: 4,
+              bathrooms: 2,
+              privatePool: true,
+              airCon: true,
+              walkToAmenities: "~5 min to town & harbour",
+              modern: true,
+              sizeSqft: 970,
+              extras: ["Roof terrace", "Compact private pool", "Free WiFi"],
+            },
+            nights: 5,
+            dates: "4–9 Oct 2026",
+            // No quote yet — the page shows "Price to confirm", never an invented figure.
+            accommodationTotal: null,
+            flights: [],
+            pros: ["Walk to everything", "Newest of the three", "Roof terrace"],
+            cons: ["Smallest pool", "Price still to confirm"],
             notes: "",
           },
         ],

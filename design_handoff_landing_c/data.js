@@ -147,5 +147,70 @@ window.HP = (function () {
   // featured.locations carry real photos; extras carry gradients. Both share shape.
   const manyLocations = featured.locations.concat(extraLocations);
 
-  return { featured, upcoming, gbp, extraLocations, manyLocations };
+  // Accommodations being compared, per location. Kalkan's first stay is the real
+  // "Villa Veranda" from the codebase seed data; the other two are plausible
+  // comparison candidates (swap for real listings). Honest about cost: a stay
+  // with total:null shows "price to confirm".
+  const VILLA_IMG = {
+    veranda: IMG.villa,
+    likya: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1600&q=80",
+    mavi: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1600&q=80",
+  };
+  const staysByLocation = {
+    kalkan: [
+      {
+        slug: "kalkan-villa-veranda",
+        name: "Villa Veranda",
+        statusLabel: "Favourite so far", statusTone: "shortlisted", favourite: true,
+        rating: "9.3",
+        image: VILLA_IMG.veranda,
+        imageAlt: "A stone villa beside its private pool on a wooded hillside at dusk",
+        photoCount: 24,
+        summary: "Recently renovated single-storey villa on a quiet road above the Yalı/Likya beach clubs, with a sea-view pool and a short walk down to the harbour.",
+        beds: 2, sleeps: 4, baths: 2, pool: true, airCon: true, sizeSqft: 1076,
+        nights: 5, dates: "4–9 Oct 2026",
+        total: 2304, perPerson: 576, perNight: 461,
+        cancel: "Free cancellation until 29 Sep",
+        walk: "~10–15 min to town & harbour",
+        pros: ["Sea-view private pool", "Single-storey — no stairs", "Recently renovated"],
+        cons: ["2 bedrooms (sleeps 4: 1 double + 3 singles)"],
+      },
+      {
+        slug: "kalkan-villa-likya-heights",
+        name: "Villa Likya Heights",
+        statusLabel: "Shortlisted", statusTone: "shortlisted", favourite: false,
+        rating: "9.1",
+        image: VILLA_IMG.likya,
+        imageAlt: "A villa with an infinity pool overlooking the sea at dusk",
+        photoCount: 31,
+        summary: "Three-bedroom villa higher up the slope with panoramic harbour views, an infinity pool and a big shaded terrace for evening meals.",
+        beds: 3, sleeps: 6, baths: 3, pool: true, airCon: true, sizeSqft: 1500,
+        nights: 5, dates: "4–9 Oct 2026",
+        total: 2680, perPerson: 670, perNight: 536,
+        cancel: "Free cancellation until 27 Sep",
+        walk: "~20 min downhill to town",
+        pros: ["3 bedrooms — room to spread out", "Infinity pool & sea views", "Large shaded dining terrace"],
+        cons: ["Steep walk back up from town", "Pricier per person"],
+      },
+      {
+        slug: "kalkan-villa-mavi",
+        name: "Villa Mavi",
+        statusLabel: "Researching", statusTone: "idea", favourite: false,
+        rating: "8.8",
+        image: VILLA_IMG.mavi,
+        imageAlt: "A modern whitewashed villa with a compact private pool and roof terrace",
+        photoCount: 18,
+        summary: "Modern two-bed moments from the old town and harbour — walkable to everything, with a compact private pool and a roof terrace for sundowners.",
+        beds: 2, sleeps: 4, baths: 2, pool: true, airCon: true, sizeSqft: 970,
+        nights: 5, dates: "4–9 Oct 2026",
+        total: null, perPerson: null, perNight: null,
+        cancel: "Awaiting quote",
+        walk: "~5 min to town & harbour",
+        pros: ["Walk to everything", "Newest of the three", "Roof terrace"],
+        cons: ["Smallest pool", "Price still to confirm"],
+      },
+    ],
+  };
+
+  return { featured, upcoming, gbp, extraLocations, manyLocations, staysByLocation };
 })();

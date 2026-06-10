@@ -98,6 +98,43 @@ const Ico = {
       <path d="M2 7c2.2 0 2.2 2 4.4 2S8.6 7 10.8 7 13 9 15.2 9 17.4 7 19.6 7 21.8 9 22 9M2 13c2.2 0 2.2 2 4.4 2s2.2-2 4.4-2 2.2 2 4.4 2 2.2-2 4.4-2 2.2 2 2.4 2" />
     </svg>
   ),
+  users: (p) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5M16 5.2a3.2 3.2 0 0 1 0 6M17.5 14.7c2.2.5 3.9 2.5 3.9 5.3" />
+    </svg>
+  ),
+  bath: (p) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M4 12V6.5A2.5 2.5 0 0 1 6.5 4 2.5 2.5 0 0 1 9 6.5M3 12h18v2a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-2ZM5 18l-1 2M19 18l1 2M8.5 6.5h2.5" />
+    </svg>
+  ),
+  snow: (p) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M12 2v20M4.5 6.5 12 11l7.5-4.5M4.5 17.5 12 13l7.5 4.5M12 2l-2.5 2.5M12 2l2.5 2.5M12 22l-2.5-2.5M12 22l2.5-2.5M4.5 6.5l.3 3.4M4.5 6.5l-3.4.3M19.5 17.5l-.3-3.4M19.5 17.5l3.4-.3" />
+    </svg>
+  ),
+  star: (p) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...p}>
+      <path d="M12 3.2l2.5 5.4 5.9.7-4.4 4 1.2 5.8L12 16.9 6.8 19l1.2-5.8-4.4-4 5.9-.7L12 3.2Z" />
+    </svg>
+  ),
+  camera: (p) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M3 8.5A2 2 0 0 1 5 6.5h1.5l1-1.6h6l1 1.6H17a2 2 0 0 1 2 2v8A2 2 0 0 1 17 18.5H5a2 2 0 0 1-2-2Z" />
+      <circle cx="11" cy="12" r="3" />
+    </svg>
+  ),
+  check: (p) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M4 12.5l5 5 11-11" />
+    </svg>
+  ),
+  heart: (p) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M12 20s-7-4.4-9.2-9C1.3 7.7 3 5 5.8 5 7.7 5 9 6.2 12 9c3-2.8 4.3-4 6.2-4C21 5 22.7 7.7 21.2 11 19 15.6 12 20 12 20Z" />
+    </svg>
+  ),
 };
 
 /** Holiday Planner wordmark — Spectral, with a small teal seal. */
