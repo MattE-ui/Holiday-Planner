@@ -77,6 +77,42 @@ Same hero + title, restructured for a 402-wide screen (iOS safe areas: ~58px top
 Identical chrome; the desktop deck switches from a small fan to a **centered carousel** (see deck spec).
 Mobile is unchanged (the rail just has more cards + dots). Demonstrated with 6 locations.
 
+### 4. Locations (trip page) — `src/app/[trip]/page.tsx`
+**Route:** opens from "Open this trip" / a trip on the landing. **Purpose:** compare the candidate
+locations for a trip, with the seasonal detail for the trip's time of year, then dive into a
+location's accommodations.
+
+**Layout** — a light editorial header, then one **cinematic full-bleed band per location**, then a footer.
+- **Sticky nav** (seafoam `hsla(190,30%,98%,.86)` + blur, `border-bottom hsl(196 24% 90%)`, height 66):
+  wordmark left, outline "+ Add a trip" right.
+- **Intro header** (`padding:30px 48px 36px`): a muted "‹ All trips" back link; then a row with, on the
+  left, a "Deciding together" status chip, the trip `<h1>` (Spectral 600 / 56px, `hsl(198 32% 14%)`),
+  and a meta line (`CalendarDays` + window · dot · `trip.subtitle`); on the right, a one-sentence intro
+  (`max-width:430; hsl(199 14% 38%)`) framing the decision.
+- **Location bands** — for each `location`, a `position:relative; height:482px; overflow:hidden` section:
+  - Full-bleed `next/image` of the location photo; image slow-zooms to `scale(1.05)` on band hover.
+  - Two scrims: foot `linear-gradient(to top, rgba(8,28,34,.88), rgba(8,28,34,.34) 46%, rgba(8,28,34,.06) 72%)`
+    and a left wash `linear-gradient(105deg, rgba(8,28,34,.55), rgba(8,28,34,.12) 42%, transparent 64%)`.
+  - **Top-left:** big serif index ("01") + a `StatusChip` (light) — "1 option costed" (success tone) or
+    "Researching" (neutral).
+  - **Bottom-left block** (`left:48; bottom:38; right:400`): `<h2>` name (Spectral 600 / 54px) with
+    `, {country}` in italic 30px; a 16.5px blurb (`max-width:580`); then an **October seasonal row** —
+    an uppercase "October" label followed by glass stat pills (`height:38; radius:999;
+    bg rgba(255,255,255,.13); border rgba(255,255,255,.28); blur`): day-high °, sea °, sun h, and
+    flight time + airport (icons: thermometer, waves, sun, plane). Below it a 13.5px season note.
+  - **Bottom-right panel** (`right:48; bottom:38; width:300; radius:18; bg rgba(12,30,36,.5); border
+    rgba(255,255,255,.18); blur`): a "{n} stays being compared" / "No stays added yet" line (bed icon);
+    then either **"from £X · ~£Ypp"** (Spectral 34px figure) or "Still researching villas — price to
+    confirm"; then a full-width white **"View accommodations" / "Add accommodations"** button → links to
+    `/{trip}/{location}`.
+- **Footer** (`padding:26px 48px`, seafoam): "Comparing N locations…" + an "+ Add another location" link.
+
+**Seasonal data:** the prototype carries illustrative October figures per location
+(`season:{high,sea,sun,rain}`, `airport`, `flightTime`, `seasonNote`). These are **not in the current
+content model** — add them to the `Location` type (or fetch from a climate source) and keep the
+"honest about cost / time of year" tone. `accomm` (count) and `from` (min costed price, or null) derive
+from the location's `holidays`.
+
 ---
 
 ## Component: Location deck (the signature interaction)
@@ -191,7 +227,10 @@ instead of a broken image — this already exists as the `Cover` component
 - `directionC.jsx` — desktop "Atelier" hero + small fixed fan (3–4 locations).
 - `directionC-many.jsx` — desktop hero + **centered carousel** (any count) ← primary deck spec.
 - `directionC-mobile.jsx` — mobile hero + **swipe rail** + dots.
-- `shared.jsx` — `SmartImage` (photo w/ gradient fallback), `Ico` (icons), `Wordmark`, `StatusChip`.
+- `locations-screen.jsx` — **Locations / trip page**: editorial header + cinematic location bands
+  (`LocationsScreen`, `LocationBand`, `SeasonStat`).
+- `shared.jsx` — `SmartImage` (photo w/ gradient fallback), `Ico` (icons inc. thermo/sun/wave),
+  `Wordmark`, `StatusChip`.
 - `data.js` — the demo data shape (mirrors your `trips.ts`; in the app, read from `trips.ts`).
 
 > Implement against your repo's real components and routes — the HTML here is the reference, your

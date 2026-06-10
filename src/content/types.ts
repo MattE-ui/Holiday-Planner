@@ -87,6 +87,12 @@ export interface Location {
   blurb?: string;
   airport?: string;
   flightSummary?: string;
+  /** Approx door-to-door flight time, e.g. "~4h15". Shown on the locations page. */
+  flightTime?: string;
+  /** Illustrative climate figures for the trip's time of year (currently October). */
+  season?: { high: number; sea: number; sun: number };
+  /** One honest line on the season — warmth, sea, how late flights run. */
+  seasonNote?: string;
   image?: string;
   imageAlt?: string;
   holidays: Holiday[];

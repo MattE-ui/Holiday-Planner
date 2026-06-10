@@ -30,6 +30,9 @@ export const trips: Trip[] = [
         airport: "Dalaman (DLM) · ~1½–2 hr transfer",
         flightSummary:
           "Jet2 direct from Manchester, Leeds Bradford, Liverpool & Birmingham (~4 hr 15 min). TUI, SunExpress & easyJet also serve some airports.",
+        flightTime: "~4h15",
+        season: { high: 26, sea: 24, sun: 8 },
+        seasonNote: "Reliably warm through October — the sea is still comfortably swimmable.",
         holidays: [
           {
             slug: "kalkan-villa-veranda",
@@ -88,6 +91,9 @@ export const trips: Trip[] = [
         airport: "Chania (CHQ) · 20–40 min to most stays",
         flightSummary:
           "Seasonal (Jun–Oct) direct from Manchester, Birmingham & Leeds Bradford with Jet2, Ryanair & TUI. Liverpool limited/none direct. ~4 hr. Routes typically end late October.",
+        flightTime: "~4h",
+        season: { high: 24, sea: 24, sun: 7 },
+        seasonNote: "Lovely in early October, but direct flights wind down towards month-end.",
         holidays: [],
       },
       {
@@ -103,6 +109,9 @@ export const trips: Trip[] = [
         airport: "Rhodes Diagoras (RHO) · 15 min to town, ~1 hr to Lindos",
         flightSummary:
           "Direct Jet2 from Leeds Bradford & Liverpool; easyJet, Jet2 & Ryanair from Birmingham; Manchester also served. Season ~Apr–Nov. ~4 hr 10–25 min.",
+        flightTime: "~4h10",
+        season: { high: 25, sea: 24, sun: 7 },
+        seasonNote: "The latest season of the three — reliable late-October sun and quieter resorts.",
         holidays: [],
       },
     ],

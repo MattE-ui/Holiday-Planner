@@ -56,6 +56,7 @@
 <script type="text/babel" src="directionC.jsx"></script>
 <script type="text/babel" src="directionC-mobile.jsx"></script>
 <script type="text/babel" src="directionC-many.jsx"></script>
+<script type="text/babel" src="locations-screen.jsx"></script>
 
 <script type="text/babel">
   const { DesignCanvas, DCSection, DCArtboard } = window;
@@ -101,6 +102,16 @@
           </DCArtboard>
           <DCArtboard id="c-d6" label="Desktop · 6 locations — the fan becomes a scrollable hand" width={W} height={H}>
             <window.DirectionCMany />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="trip-locations"
+          title="Trip · Locations"
+          subtitle="What opens when you 'Open this trip'. Each candidate location gets a cinematic band with its blurb, a late-October seasonal snapshot (day high · sea · sun · flights), the honest price/stays status, and a way into its accommodations. Hover a band to feel the image; hover the buttons."
+        >
+          <DCArtboard id="loc-desktop" label="Autumn Holiday 2026 — locations on the shortlist" width={W} height={1880}>
+            <window.LocationsScreen />
           </DCArtboard>
         </DCSection>
       </DesignCanvas>
