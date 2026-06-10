@@ -163,12 +163,15 @@ function LocationBand({
     ? `${stays} option${stays === 1 ? "" : "s"} costed`
     : "Researching";
 
+  // Hero: the location's own photo, else the first stay photo, else a gradient.
+  const heroImage = loc.image ?? loc.holidays.find((h) => h.image)?.image;
+
   return (
     <section className="group relative h-[clamp(720px,90vh,940px)] overflow-hidden text-white">
       {/* Full-bleed photo (slow-zoom on hover) or a brand gradient cover. */}
-      {loc.image ? (
+      {heroImage ? (
         <Image
-          src={loc.image}
+          src={heroImage}
           alt={loc.imageAlt ?? ""}
           fill
           priority={priority}
@@ -199,6 +202,14 @@ function LocationBand({
         </span>
         <StatusChip label={statusLabel} tone={costed ? "success" : "idea"} light />
       </div>
+
+      {/* Top-right: edit this location (name, details and this photo). */}
+      <Link
+        href={`/${tripSlug}/${loc.slug}/edit`}
+        className="absolute right-6 top-8 z-10 inline-flex h-[34px] items-center gap-2 rounded-full border border-white/[0.34] bg-white/[0.14] px-3.5 text-[12.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/[0.26] sm:right-12"
+      >
+        <Pencil className="h-[13px] w-[13px]" aria-hidden /> Edit location & photo
+      </Link>
 
       {/* Bottom-left: identity, blurb, October season row, note. */}
       <div className="absolute bottom-9 left-6 right-6 max-w-[720px] sm:left-12 lg:right-[400px]">

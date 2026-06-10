@@ -23,6 +23,9 @@ export interface ParsedBooking {
   /** Derived from checkin/checkout params when the link carries them. */
   nights?: number;
   dates?: string;
+  /** Property check-in/out times, e.g. "15:00 – 22:00" / "until 11:00". */
+  checkIn?: string;
+  checkOut?: string;
   /** Unit specs mined from the page where present. */
   bedrooms?: number;
   bathrooms?: number;
@@ -290,6 +293,16 @@ export function parseBookingHtml(rawHtml: string, finalUrl: string): ParsedBooki
     }
   }
 
+  // ---- Check-in / check-out times -------------------------------------------
+  const checkinRange = html.match(
+    /"checkinTimeRange"\s*:\s*\{[^{}]*?"fromFormatted"\s*:\s*(?:"(\d{1,2}:\d{2})"|null)[^{}]*?"untilFormatted"\s*:\s*(?:"(\d{1,2}:\d{2})"|null)/,
+  );
+  if (checkinRange) result.checkIn = timeRangeLabel(checkinRange[1], checkinRange[2]);
+  const checkoutRange = html.match(
+    /"checkoutTimeRange"\s*:\s*\{[^{}]*?"fromFormatted"\s*:\s*(?:"(\d{1,2}:\d{2})"|null)[^{}]*?"untilFormatted"\s*:\s*(?:"(\d{1,2}:\d{2})"|null)/,
+  );
+  if (checkoutRange) result.checkOut = timeRangeLabel(checkoutRange[1], checkoutRange[2]);
+
   // ---- Unit specs & quoted price -------------------------------------------
   result.sleeps = firstInt(html, [
     /"(?:max_persons|maxPersons|maxGuests|max_occupancy|maxOccupancy)"\s*:\s*"?(\d+)/,
@@ -298,8 +311,12 @@ export function parseBookingHtml(rawHtml: string, finalUrl: string): ParsedBooki
     /Recommended for\s*(\d+)\s*adults?/i,
     /sleeps\s*(\d+)/i,
   ], 1, 50);
-  result.bedrooms = firstInt(html, [/(\d+)\s*bedrooms?\b/i, /"(?:nr_bedrooms|numberOfBedrooms)"\s*:\s*"?(\d+)/], 1, 20);
-  result.bathrooms = firstInt(html, [/(\d+)\s*bathrooms?\b/i, /"(?:nr_bathrooms|numberOfBathrooms)"\s*:\s*"?(\d+)/], 1, 20);
+  result.bedrooms =
+    firstInt(html, [/(\d+)\s*bedrooms?\b/i, /"(?:nr_bedrooms|numberOfBedrooms)"\s*:\s*"?(\d+)/], 1, 20) ??
+    wordNumber(html, /\b(one|two|three|four|five|six|seven|eight|nine|ten)[-\s]bedrooms?\b/i);
+  result.bathrooms =
+    firstInt(html, [/(\d+)\s*bathrooms?\b/i, /"(?:nr_bathrooms|numberOfBathrooms)"\s*:\s*"?(\d+)/], 1, 20) ??
+    wordNumber(html, /\b(one|two|three|four|five|six|seven|eight|nine|ten)[-\s]bathrooms?\b/i);
   // Size: the page shows ft² or m² depending on locale — handle both.
   const sqft = firstFloat(html, [/(\d+(?:[.,]\d+)?)\s*(?:ft²|ft&#178;|ft&sup2;|sq\.?\s?ft|sqft)/i], 100, 50000);
   if (sqft != null) {
@@ -318,6 +335,8 @@ export function parseBookingHtml(rawHtml: string, finalUrl: string): ParsedBooki
       /"grossPrice"\s*:\s*\{[^{}]*?"currency"\s*:\s*"GBP"[^{}]*?"value"\s*:\s*([\d.]+)/,
       /"grossPrice"\s*:\s*\{[^{}]*?"value"\s*:\s*([\d.]+)[^{}]*?"currency"\s*:\s*"GBP"/,
     ], 50, 100000) ??
+    priceFromBreakdownJson(html) ??
+    priceFromCurrentLabel(html) ??
     priceNearTaxesLine(html) ??
     priceFromDisplayBlock(html) ??
     priceFromStayBlock(html, result.nights) ??
@@ -457,13 +476,62 @@ function collectPillLabels(
   }
 }
 
-/** The most precise visual anchor: the payable total renders immediately
- *  before "Includes taxes and charges" — take the last £ amount before it. */
+/** ("15:00","22:00") → "15:00 – 22:00"; one-sided ranges read naturally. */
+function timeRangeLabel(from?: string, until?: string): string | undefined {
+  if (from && until && until !== "00:00") return `${from} – ${until}`;
+  if (from) return `from ${from}`;
+  if (until) return `until ${until}`;
+  return undefined;
+}
+
+const WORD_NUMBERS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+};
+
+/** "Two-Bedroom Villa" → 2: some pages only spell unit sizes out in words. */
+function wordNumber(html: string, re: RegExp): number | undefined {
+  const m = html.match(re);
+  return m ? WORD_NUMBERS[m[1].toLowerCase()] : undefined;
+}
+
+/** The classic page's embedded price-breakdown JSON names the payable figure
+ *  outright: {"b_type":"total", …, "b_value_user_currency":"£2,328.97"}. The
+ *  recommended block's breakdown serialises first; trust only £-tagged values
+ *  so other currencies never leak through. */
+function priceFromBreakdownJson(html: string): number | undefined {
+  for (const m of Array.from(html.matchAll(/"b_type"\s*:\s*"total"[^{}]{0,400}/g))) {
+    const val = m[0].match(/"b_value_user_currency(?:_rounded)?"\s*:\s*"(?:£|&pound;|&#163;)\s?([\d,]+(?:\.\d{1,2})?)"/);
+    if (!val) continue;
+    const n = parseFloat(val[1].replace(/,/g, ""));
+    if (isFinite(n) && n >= 50 && n <= 100000) return n;
+  }
+  return undefined;
+}
+
+/** The rendered price block labels the payable figure explicitly:
+ *  "Original price £1,918 Current price £1,733" — take the first
+ *  "Current price" amount (the recommended block renders first). */
+function priceFromCurrentLabel(html: string): number | undefined {
+  const m = html.match(/Current price\s*(?:£|&#163;|&pound;)\s?([\d,]+(?:\.\d{1,2})?)/i);
+  if (!m) return undefined;
+  const n = parseFloat(m[1].replace(/,/g, ""));
+  return isFinite(n) && n >= 50 && n <= 100000 ? n : undefined;
+}
+
+/** The payable total renders just before "Includes taxes and charges" — take
+ *  the last £ amount before it that isn't a discount line (the embedded
+ *  price-breakdown JSON lists "Genius discount £185.37" right there too). */
 function priceNearTaxesLine(html: string): number | undefined {
   for (const m of Array.from(html.matchAll(/Includes taxes and charges/gi))) {
-    const back = html.slice(Math.max(0, m.index! - 400), m.index);
-    const amounts = poundAmounts(back);
-    if (amounts.length) return amounts[amounts.length - 1];
+    const back = stripStruckPrices(html.slice(Math.max(0, m.index! - 400), m.index));
+    let best: number | undefined;
+    for (const am of Array.from(back.matchAll(/(?:£|&#163;|&pound;)\s?([\d,]+(?:\.\d{1,2})?)/g))) {
+      const before = back.slice(Math.max(0, am.index! - 80), am.index);
+      if (/discount|genius|credit|reward/i.test(before)) continue;
+      const n = parseFloat(am[1].replace(/,/g, ""));
+      if (isFinite(n) && n >= 50 && n <= 100000) best = n;
+    }
+    if (best != null) return best;
   }
   return undefined;
 }

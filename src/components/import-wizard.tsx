@@ -363,6 +363,12 @@ function ImportDetails({
             <Field label="Dates" hint="e.g. 4–9 Oct 2026">
               <Input name="dates" key={`d-${parsed.dates}`} defaultValue={parsed.dates} />
             </Field>
+            <Field label="Check-in" hint="e.g. 15:00 – 22:00">
+              <Input name="checkIn" key={`ci-${parsed.checkIn}`} defaultValue={parsed.checkIn ?? ""} />
+            </Field>
+            <Field label="Check-out" hint="e.g. until 11:00">
+              <Input name="checkOut" key={`co-${parsed.checkOut}`} defaultValue={parsed.checkOut ?? ""} />
+            </Field>
             <Field
               label="Accommodation total (£)"
               hint={
@@ -460,6 +466,7 @@ export function condenseListingHtml(rawHtml: string): string {
   for (const re of [
     /"(?:max_persons|maxPersons|maxGuests|max_occupancy|maxOccupancy|nr_bedrooms|numberOfBedrooms|nr_bathrooms|numberOfBathrooms)"\s*:\s*"?\d+/g,
     /\d+\s*(?:bedrooms?|bathrooms?)\b/gi,
+    /\b(?:one|two|three|four|five|six|seven|eight|nine|ten)[-\s](?:bedrooms?|bathrooms?)\b/gi,
     /(?:sleeps|max\.?\s*(?:people|persons|guests)\D{0,6})\s*\d+/gi,
     /Recommended for\s*\d+\s*adults?/gi,
     /\d+(?:[.,]\d+)?\s*(?:ft²|ft&#178;|ft&sup2;|sq\.?\s?ft|sqft|m²|m&#178;|m&sup2;|\bsqm\b)/gi,
@@ -473,7 +480,21 @@ export function condenseListingHtml(rawHtml: string): string {
   const stayIdx = html.search(/\d+\s*nights?,\s*\d+\s*adults?/i);
   if (stayIdx >= 0) parts.push(html.slice(Math.max(0, stayIdx - 2000), stayIdx + 2000));
 
-  // The payable total renders just before "Includes taxes and charges".
+  // Check-in / check-out time ranges.
+  for (const re of [/"checkinTimeRange"\s*:\s*\{[^{}]*\}/, /"checkoutTimeRange"\s*:\s*\{[^{}]*\}/]) {
+    const m = html.match(re);
+    if (m) parts.push(m[0]);
+  }
+  // The price-breakdown JSON's explicit totals.
+  for (const m of Array.from(html.matchAll(/"b_type"\s*:\s*"total"[^{}]{0,400}/g)).slice(0, 8)) {
+    parts.push(m[0]);
+  }
+  // The rendered "Original/Current price" labels and the taxes-line lookback.
+  for (const m of Array.from(
+    html.matchAll(/Current price\s*(?:£|&#163;|&pound;)\s?[\d,]+(?:\.\d{1,2})?/gi),
+  ).slice(0, 6)) {
+    parts.push(m[0]);
+  }
   for (const m of Array.from(html.matchAll(/Includes taxes and charges/gi)).slice(0, 4)) {
     parts.push(html.slice(Math.max(0, m.index! - 400), m.index! + 30));
   }

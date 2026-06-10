@@ -118,7 +118,13 @@ export function StayForm({
               placeholder="party total"
             />
           </Field>
-          <Field label="Rate note" className="sm:col-span-3" hint="Cancellation terms, cheaper non-refundable rate, etc.">
+          <Field label="Check-in" hint="e.g. 15:00 – 22:00">
+            <Input name="checkIn" defaultValue={initial?.checkIn} />
+          </Field>
+          <Field label="Check-out" hint="e.g. until 11:00">
+            <Input name="checkOut" defaultValue={initial?.checkOut} />
+          </Field>
+          <Field label="Rate note" hint="Cancellation terms, cheaper non-refundable rate, etc.">
             <Input name="rateNote" defaultValue={initial?.rateNote} />
           </Field>
         </div>

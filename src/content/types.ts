@@ -72,6 +72,10 @@ export interface Holiday {
 
   nights?: number;
   dates?: string;
+  /** e.g. "15:00 – 22:00" or "from 16:00". */
+  checkIn?: string;
+  /** e.g. "until 11:00". */
+  checkOut?: string;
   /** Headline accommodation cost for the stay (party total). null = to confirm. */
   accommodationTotal?: number | null;
   /** Optional alternative rate note, e.g. a cheaper non-refundable price. */

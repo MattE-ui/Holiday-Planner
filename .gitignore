@@ -34,4 +34,4 @@ next-env.d.ts
 /data/
 
 # local parser-tuning sample (never committed)
-/listing.html
+/listing*.html

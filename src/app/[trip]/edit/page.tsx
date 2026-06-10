@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTrip } from "@/lib/store";
 import { deleteTrip, updateTrip } from "@/lib/actions";
 import { Field, FormPage, Input } from "@/components/form";
+import { ImagePicker } from "@/components/image-picker";
 import { SubmitButton } from "@/components/submit-button";
 import { DeleteButton } from "@/components/delete-button";
 
@@ -27,6 +28,20 @@ export default async function EditTripPage({ params }: { params: { trip: string 
           <Field label="Subtitle" className="sm:col-span-2">
             <Input name="subtitle" defaultValue={trip.subtitle} />
           </Field>
+        </div>
+        <h2 className="mt-9 font-display text-[22px] font-semibold tracking-[-0.01em] text-foreground">
+          Cover photo
+        </h2>
+        <p className="mt-1 text-[13.5px] text-muted-foreground">
+          Only shown on the All-trips cards. The full-screen photo behind each location is edited
+          from that location — use &ldquo;Edit location &amp; photo&rdquo; on its band or page.
+        </p>
+        <div className="mt-4">
+          <ImagePicker
+            initialQuery={trip.locations[0] ? `${trip.locations[0].name} ${trip.locations[0].country}` : trip.name}
+            defaultImage={trip.image}
+            defaultAlt={trip.imageAlt}
+          />
         </div>
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t pt-6">
           <SubmitButton>Save changes</SubmitButton>

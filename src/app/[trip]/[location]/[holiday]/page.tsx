@@ -6,6 +6,7 @@ import {
   BedDouble,
   CalendarDays,
   Check,
+  Clock,
   ExternalLink,
   Footprints,
   Info,
@@ -455,6 +456,16 @@ function PriceSidebar({
           {holiday.dates && (
             <div className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground">
               <CalendarDays className="h-[15px] w-[15px]" aria-hidden /> {holiday.dates}
+            </div>
+          )}
+          {(holiday.checkIn || holiday.checkOut) && (
+            <div className="mt-1.5 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+              <Clock className="h-[15px] w-[15px] shrink-0" aria-hidden />
+              <span>
+                {holiday.checkIn && <>Check-in {holiday.checkIn}</>}
+                {holiday.checkIn && holiday.checkOut && " · "}
+                {holiday.checkOut && <>check-out {holiday.checkOut}</>}
+              </span>
             </div>
           )}
         </div>

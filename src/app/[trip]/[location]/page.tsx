@@ -12,6 +12,7 @@ import {
   Check,
   Footprints,
   Heart,
+  Pencil,
   Plus,
   Snowflake,
   Star,
@@ -53,12 +54,21 @@ function deriveStay(h: Holiday, travellers: number) {
   };
 }
 
-/** A short cancellation/quote line. Pulls a date out of `rateNote` when there is
- *  one; for an un-costed stay it's a quote note, shown in amber by the cards. */
-function cancellationLine(h: Holiday): string {
-  if (h.accommodationTotal == null) return h.rateNote?.trim() || "Awaiting quote";
-  const m = h.rateNote?.match(/(?:before|until)\s+(\d{1,2}\s+\w{3,})/i);
-  return m ? `Free cancellation until ${m[1]}` : "Free cancellation available";
+type CancelInfo = { text: string; tone: "good" | "warn" | "muted" } | null;
+
+/** A short, honest terms line derived only from what the rate note actually
+ *  says — never an assumed "free cancellation". Nothing recorded → no line
+ *  (or "Awaiting quote" while the stay is un-costed). */
+function cancellationLine(h: Holiday): CancelInfo {
+  const note = h.rateNote?.trim();
+  if (note) {
+    if (/non-?refundable/i.test(note)) return { text: "Non-refundable", tone: "warn" };
+    const m = note.match(/free cancellation[^.;]*/i);
+    if (m) return { text: m[0].trim(), tone: "good" };
+    return { text: note.length > 64 ? `${note.slice(0, 61)}…` : note, tone: "muted" };
+  }
+  if (h.accommodationTotal == null) return { text: "Awaiting quote", tone: "warn" };
+  return null;
 }
 
 export default async function LocationPage({
@@ -161,7 +171,7 @@ function PageHeader({
   travellers,
 }: {
   trip: { slug: string; name: string };
-  location: { name: string; country: string };
+  location: { slug: string; name: string; country: string };
   stays: Holiday[];
   travellers: number;
 }) {
@@ -173,12 +183,20 @@ function PageHeader({
 
   return (
     <header className="px-6 pb-5 pt-7 sm:px-12">
-      <Link
-        href={`/${trip.slug}`}
-        className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-[15px] w-[15px]" /> {trip.name} · all locations
-      </Link>
+      <div className="flex items-center justify-between gap-4">
+        <Link
+          href={`/${trip.slug}`}
+          className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-[15px] w-[15px]" /> {trip.name} · all locations
+        </Link>
+        <Link
+          href={`/${trip.slug}/${location.slug}/edit`}
+          className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary transition-opacity hover:opacity-80"
+        >
+          <Pencil className="h-[14px] w-[14px]" /> Edit location & photo
+        </Link>
+      </div>
 
       <div className="mt-3.5 flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-10">
         <div>
@@ -318,14 +336,14 @@ function FeaturedStay({
                   ~{formatGBP(d.perPerson!)}pp
                   {d.perNight != null && <> · ~{formatGBP(d.perNight)}/night</>}
                 </div>
-                <CancelLine text={d.cancel} costed />
+                <CancelLine info={d.cancel} />
               </>
             ) : (
               <>
                 <div className="font-display text-2xl font-semibold text-foreground/80">
                   Price to confirm
                 </div>
-                <CancelLine text={d.cancel} costed={false} />
+                <CancelLine info={d.cancel} />
               </>
             )}
           </div>
@@ -404,14 +422,14 @@ function CompactStay({
                   </span>
                   <span className="text-xs text-muted-foreground">· ~{formatGBP(d.perPerson!)}pp</span>
                 </div>
-                <CancelLine text={d.cancel} costed small />
+                <CancelLine info={d.cancel} small />
               </>
             ) : (
               <>
                 <div className="font-display text-[19px] font-semibold text-foreground/70">
                   Price to confirm
                 </div>
-                <CancelLine text={d.cancel} costed={false} small />
+                <CancelLine info={d.cancel} small />
               </>
             )}
           </div>
@@ -490,22 +508,25 @@ function SpecChip({
   );
 }
 
-/** Green free-cancellation line (costed) or amber quote note (un-costed). */
-function CancelLine({ text, costed, small }: { text: string; costed: boolean; small?: boolean }) {
+/** The terms line under a price: green confirmed free-cancellation, amber
+ *  warnings (non-refundable / awaiting quote), muted for other notes. */
+function CancelLine({ info, small }: { info: CancelInfo; small?: boolean }) {
+  if (!info) return null;
   return (
     <div
       className={cn(
         "mt-2 inline-flex items-center gap-1.5 font-semibold",
         small ? "text-xs" : "text-[12.5px]",
-        costed ? "text-success" : "text-warning",
+        info.tone === "good" && "text-success",
+        info.tone === "warn" && "text-warning",
+        info.tone === "muted" && "font-medium text-muted-foreground",
       )}
     >
-      {costed ? (
-        <Check className={small ? "h-[13px] w-[13px]" : "h-3.5 w-3.5"} aria-hidden />
-      ) : (
-        <span className="h-1.5 w-1.5 rounded-full bg-warning" aria-hidden />
+      {info.tone === "good" && (
+        <Check className={cn("shrink-0", small ? "h-[13px] w-[13px]" : "h-3.5 w-3.5")} aria-hidden />
       )}
-      {text}
+      {info.tone === "warn" && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" aria-hidden />}
+      {info.text}
     </div>
   );
 }

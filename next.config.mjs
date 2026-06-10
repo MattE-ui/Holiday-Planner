@@ -19,6 +19,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "**.bstatic.com",
       },
+      // Wikimedia Commons location photos (the keyless image search)
+      {
+        protocol: "https",
+        hostname: "upload.wikimedia.org",
+      },
     ],
   },
 };

@@ -65,6 +65,8 @@ export async function updateTrip(tripSlug: string, formData: FormData) {
     subtitle: str(formData, "subtitle"),
     window: str(formData, "window"),
     travellers: num(formData, "travellers"),
+    image: str(formData, "image"),
+    imageAlt: str(formData, "imageAlt"),
   });
   refreshAll();
   redirect(`/${tripSlug}`);
@@ -85,7 +87,44 @@ export async function createLocation(tripSlug: string, formData: FormData) {
   const high = num(formData, "seasonHigh");
   const sea = num(formData, "seasonSea");
   const sun = num(formData, "seasonSun");
+
+  // No photo chosen → fetch the best destination shot automatically (the
+  // picker on the edit page can always override it).
+  let image = str(formData, "image");
+  let imageAlt = str(formData, "imageAlt");
+  if (!image) {
+    const { autoLocationImage } = await import("@/lib/images");
+    const auto = await autoLocationImage(`${name} ${country}`);
+    if (auto) {
+      image = auto.url;
+      imageAlt = imageAlt ?? auto.alt;
+    }
+  }
+
   const location = await store.addLocation(tripSlug, {
+    name,
+    country,
+    blurb: str(formData, "blurb"),
+    airport: str(formData, "airport"),
+    flightSummary: str(formData, "flightSummary"),
+    flightTime: str(formData, "flightTime"),
+    season: high != null && sea != null && sun != null ? { high, sea, sun } : undefined,
+    seasonNote: str(formData, "seasonNote"),
+    image,
+    imageAlt,
+  });
+  refreshAll();
+  redirect(`/${tripSlug}/${location.slug}`);
+}
+
+export async function updateLocation(tripSlug: string, locationSlug: string, formData: FormData) {
+  const name = str(formData, "name");
+  const country = str(formData, "country");
+  if (!name || !country) return;
+  const high = num(formData, "seasonHigh");
+  const sea = num(formData, "seasonSea");
+  const sun = num(formData, "seasonSun");
+  await store.updateLocation(tripSlug, locationSlug, {
     name,
     country,
     blurb: str(formData, "blurb"),
@@ -98,7 +137,7 @@ export async function createLocation(tripSlug: string, formData: FormData) {
     imageAlt: str(formData, "imageAlt"),
   });
   refreshAll();
-  redirect(`/${tripSlug}/${location.slug}`);
+  redirect(`/${tripSlug}/${locationSlug}`);
 }
 
 export async function deleteLocation(tripSlug: string, locationSlug: string) {
@@ -174,6 +213,8 @@ function holidayFromForm(formData: FormData): Omit<Holiday, "slug"> {
     },
     nights: num(formData, "nights"),
     dates: str(formData, "dates"),
+    checkIn: str(formData, "checkIn"),
+    checkOut: str(formData, "checkOut"),
     accommodationTotal: num(formData, "accommodationTotal") ?? null,
     rateNote: str(formData, "rateNote"),
     flights,
@@ -217,6 +258,21 @@ export async function setStayStatus(
 ) {
   await store.updateHoliday(tripSlug, locationSlug, holidaySlug, { status });
   refreshAll();
+}
+
+// ---- image search ---------------------------------------------------------------
+
+export async function searchImages(query: string) {
+  const { searchLocationImages } = await import("@/lib/images");
+  try {
+    return { ok: true as const, images: await searchLocationImages(query) };
+  } catch (e) {
+    return {
+      ok: false as const,
+      images: [],
+      error: e instanceof Error ? e.message : "Image search failed.",
+    };
+  }
 }
 
 // ---- Booking.com import ----------------------------------------------------------
@@ -272,13 +328,22 @@ export async function importStay(formData: FormData) {
     tripSlug = trip.slug;
   }
 
-  // Target location — existing in that trip, or created from the parsed city.
+  // Target location — existing in that trip, or created from the parsed city,
+  // with a destination hero fetched automatically (the stay's own photos are
+  // accommodation shots, not the place).
   let locationSlug = str(formData, "locationSlug");
   if (!locationSlug || locationSlug === "__new__") {
     const name = str(formData, "newLocationName");
     const country = str(formData, "newLocationCountry");
     if (!name || !country) return;
-    const location = await store.addLocation(tripSlug, { name, country });
+    const { autoLocationImage } = await import("@/lib/images");
+    const auto = await autoLocationImage(`${name} ${country}`);
+    const location = await store.addLocation(tripSlug, {
+      name,
+      country,
+      image: auto?.url,
+      imageAlt: auto?.alt,
+    });
     locationSlug = location.slug;
   }
 
