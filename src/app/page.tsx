@@ -1,50 +1,51 @@
-import Link from "next/link";
 import { trips } from "@/content/trips";
-import { Cover } from "@/components/cover";
-import { Card } from "@/components/ui/card";
-import { ArrowRight, MapPin, CalendarDays } from "lucide-react";
+import { AtelierLanding, type DeckLocation } from "@/components/atelier-landing";
 
 export default function HomePage() {
-  return (
-    <div className="container py-10 md:py-14">
-      <section className="mx-auto max-w-2xl text-center">
-        <p className="text-sm font-semibold uppercase tracking-widest text-accent">Where to next</p>
-        <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight md:text-5xl">
-          Your holidays
-        </h1>
-        <p className="mt-3 text-muted-foreground">
-          Pick a trip to compare locations, accommodation, flights and full price breakdowns side by side.
-        </p>
-      </section>
+  // The home page lands on the in-progress (featured) trip; the rest are "also
+  // planning". Everything is derived from the existing content model — no schema
+  // changes — and handed to the client deck as plain serialisable props.
+  const featured = trips[0];
+  const travellers = featured.travellers ?? 1;
 
-      <section className="mt-10 grid gap-6 sm:grid-cols-2">
-        {trips.map((trip) => {
-          const holidayCount = trip.locations.reduce((n, l) => n + l.holidays.length, 0);
-          return (
-            <Link key={trip.slug} href={`/${trip.slug}`} className="group">
-              <Card className="overflow-hidden transition-shadow group-hover:shadow-lift">
-                <Cover seed={trip.slug} image={trip.image} label="🌅" className="h-44 p-5">
-                  <h2 className="font-display text-2xl font-semibold tracking-tight">{trip.name}</h2>
-                  {trip.window && <p className="text-sm text-white/85">{trip.window}</p>}
-                </Cover>
-                <div className="flex items-center justify-between p-5">
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4" /> {trip.locations.length} locations
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <CalendarDays className="h-4 w-4" /> {holidayCount} options
-                    </span>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                    Open <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </span>
-                </div>
-              </Card>
-            </Link>
-          );
-        })}
-      </section>
-    </div>
+  const locations: DeckLocation[] = featured.locations.map((loc) => {
+    const prices = loc.holidays
+      .map((h) => h.accommodationTotal)
+      .filter((n): n is number => typeof n === "number");
+    return {
+      slug: loc.slug,
+      name: loc.name,
+      country: loc.country,
+      image: loc.image,
+      imageAlt: loc.imageAlt,
+      blurb: loc.blurb ?? "",
+      // "From" price = cheapest costed holiday here; null stays honest as "Researching".
+      from: prices.length ? Math.min(...prices) : null,
+    };
+  });
+
+  const fromPrices = locations.map((l) => l.from).filter((n): n is number => n != null);
+  const fromPrice = fromPrices.length ? Math.min(...fromPrices) : null;
+  const perPerson = fromPrice != null ? Math.round(fromPrice / travellers) : null;
+
+  // A data-driven status label, rather than a schema field.
+  const statuses = featured.locations.flatMap((loc) => loc.holidays.map((h) => h.status));
+  const status = statuses.includes("booked")
+    ? "Booked"
+    : statuses.some((s) => s === "shortlisted" || s === "favourite")
+      ? "Deciding together"
+      : "Just an idea";
+
+  return (
+    <AtelierLanding
+      tripSlug={featured.slug}
+      tripName={featured.name}
+      tripWindow={featured.window}
+      status={status}
+      locations={locations}
+      fromPrice={fromPrice}
+      perPerson={perPerson}
+      upcomingCount={trips.length - 1}
+    />
   );
 }

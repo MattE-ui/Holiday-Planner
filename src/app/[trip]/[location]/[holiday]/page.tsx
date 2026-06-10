@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { trips, getHoliday } from "@/content/trips";
+import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { Cover } from "@/components/cover";
+import { Hero } from "@/components/hero";
 import { PriceBreakdown } from "@/components/price-breakdown";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,14 @@ const statusStyle: Record<HolidayStatus, { label: string; variant: "default" | "
   shortlisted: { label: "Shortlisted", variant: "warning" },
   favourite: { label: "Favourite", variant: "success" },
   booked: { label: "Booked", variant: "success" },
+};
+
+/** Solid, legible pill styles for status badges sitting over a photo hero. */
+const heroPill: Record<"default" | "secondary" | "success" | "warning", string> = {
+  default: "bg-primary text-primary-foreground",
+  secondary: "bg-white/90 text-primary",
+  success: "bg-success text-white",
+  warning: "bg-warning text-white",
 };
 
 function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
@@ -50,30 +59,45 @@ export default function HolidayPage({
   const yn = (v?: boolean) => (v ? "Yes" : v === false ? "No" : "—");
 
   return (
-    <div className="container py-8 md:py-10">
-      <Breadcrumbs
-        items={[
-          { href: "/", label: "Holidays" },
-          { href: `/${trip.slug}`, label: trip.name },
-          { href: `/${trip.slug}/${location.slug}`, label: location.name },
-          { label: holiday.name },
-        ]}
-      />
-
-      <Cover seed={holiday.slug} image={holiday.image} label="🏖️" className="mb-8 h-56 p-6 md:h-64">
+    <>
+      <Hero
+        image={holiday.image}
+        imageAlt={holiday.imageAlt}
+        heightClassName="min-h-[52vh] md:min-h-[58vh]"
+        top={
+          <Breadcrumbs
+            tone="onImage"
+            items={[
+              { href: "/", label: "Holidays" },
+              { href: `/${trip.slug}`, label: trip.name },
+              { href: `/${trip.slug}/${location.slug}`, label: location.name },
+              { label: holiday.name },
+            ]}
+          />
+        }
+      >
         <div className="flex flex-wrap items-center gap-2">
-          {s && <Badge variant={s.variant}>{s.label}</Badge>}
+          {s && (
+            <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold", heroPill[s.variant])}>
+              {s.label}
+            </span>
+          )}
           {holiday.rating && (
-            <Badge variant="secondary" className="bg-white/85 text-primary">★ {holiday.rating}</Badge>
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-primary">
+              ★ {holiday.rating}
+            </span>
           )}
         </div>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">{holiday.name}</h1>
-        <p className="text-white/85">
+        <h1 className="mt-3 font-display text-[clamp(2.25rem,5.5vw,4rem)] font-semibold leading-[1.04] tracking-tight [text-wrap:balance]">
+          {holiday.name}
+        </h1>
+        <p className="mt-2 text-white/85">
           {location.name}, {location.country}
         </p>
-      </Cover>
+      </Hero>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+      <div className="container py-10 md:py-14">
+        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         {/* main column */}
         <div className="space-y-8">
           {holiday.summary && <p className="text-lg text-muted-foreground">{holiday.summary}</p>}
@@ -234,7 +258,8 @@ export default function HolidayPage({
             </CardContent>
           </Card>
         </aside>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

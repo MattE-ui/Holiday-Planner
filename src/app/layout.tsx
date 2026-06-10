@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
+import { Spectral } from "next/font/google";
 import "./globals.css";
-import { SiteHeader } from "@/components/site-header";
+import { SiteChrome } from "@/components/site-chrome";
+
+const display = Spectral({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-display",
+  display: "swap",
+  fallback: ["Georgia", "Cambria", "Times New Roman", "serif"],
+});
 
 export const metadata: Metadata = {
   title: "Holiday Planner",
@@ -9,13 +19,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={display.variable}>
       <body className="min-h-screen font-sans antialiased">
-        <SiteHeader />
-        <main>{children}</main>
-        <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-          Holiday Planner · built for comparing trips before booking
-        </footer>
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

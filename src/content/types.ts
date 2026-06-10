@@ -55,6 +55,8 @@ export interface Holiday {
   listingUrl?: string;
   /** Path under /public or an absolute URL. Optional — a gradient is shown if absent. */
   image?: string;
+  /** Alt text for `image`. Describe the scene; it's part of the voice. */
+  imageAlt?: string;
   /** Guest/host rating shown as a badge, e.g. "9.3 / 10". */
   rating?: string;
 
@@ -86,6 +88,7 @@ export interface Location {
   airport?: string;
   flightSummary?: string;
   image?: string;
+  imageAlt?: string;
   holidays: Holiday[];
 }
 
@@ -96,5 +99,6 @@ export interface Trip {
   window?: string; // e.g. "Late September – October 2026"
   travellers?: number;
   image?: string;
+  imageAlt?: string;
   locations: Location[];
 }

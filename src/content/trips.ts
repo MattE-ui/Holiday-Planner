@@ -19,6 +19,12 @@ export const trips: Trip[] = [
         slug: "kalkan",
         name: "Kalkan",
         country: "Turkey",
+        // Kalkan isn't on Unsplash; this is its near-identical Turquoise-Coast
+        // neighbour Kaş (25 min along the coast). Swap for a Kalkan shot when you have one.
+        image:
+          "https://images.unsplash.com/photo-1683977817985-8493d2836311?auto=format&fit=crop&w=2000&q=80",
+        imageAlt:
+          "Evening light over a harbour of traditional wooden gulets on Turkey's Turquoise Coast, the hillside town rising behind",
         blurb:
           "Hillside resort town on the Turquoise Coast — villa-dense slopes above a pretty harbour and an old town full of rooftop restaurants. Strong value for private-pool villas with sea views.",
         airport: "Dalaman (DLM) · ~1½–2 hr transfer",
@@ -33,6 +39,10 @@ export const trips: Trip[] = [
             summary:
               "Recently renovated single-storey villa on a quiet road above the Yali/Likya beach clubs, with a sea-view pool and a short walk down to the harbour.",
             listingUrl: "https://www.booking.com/Share-M5KbwSFR",
+            // Representative image — swap for the listing's own photos.
+            image:
+              "https://images.unsplash.com/photo-1509600110300-21b9d5fedeb7?auto=format&fit=crop&w=1600&q=80",
+            imageAlt: "A stone villa beside its private pool on a wooded hillside at dusk",
             accommodation: {
               bedrooms: 2,
               sleeps: 4,
@@ -69,6 +79,10 @@ export const trips: Trip[] = [
         slug: "chania",
         name: "Chania",
         country: "Crete, Greece",
+        image:
+          "https://images.unsplash.com/photo-1667307450731-c4e7eeb9e8b3?auto=format&fit=crop&w=2000&q=80",
+        imageAlt:
+          "Clear turquoise water curving around a headland on the north-west coast of Crete near Chania",
         blurb:
           "North-west Crete — Venetian harbour, atmospheric old town and some of the island's best beaches. Plenty of private-pool villas in the villages just outside the city (Almyrida, Kalyves, Apokoronas).",
         airport: "Chania (CHQ) · 20–40 min to most stays",
@@ -80,6 +94,10 @@ export const trips: Trip[] = [
         slug: "rhodes",
         name: "Rhodes",
         country: "Greece",
+        image:
+          "https://images.unsplash.com/photo-1711201985055-fc38c83030a4?auto=format&fit=crop&w=2000&q=80",
+        imageAlt:
+          "A bougainvillea-draped stone archway in the medieval Old Town of Rhodes, opening onto the sea",
         blurb:
           "Larger Dodecanese island with a UNESCO medieval old town and a good spread of resort villages. Private-pool villas around Lindos, Pefkos and the calmer south-east. Season runs later — direct flights often into November.",
         airport: "Rhodes Diagoras (RHO) · 15 min to town, ~1 hr to Lindos",
